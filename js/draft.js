@@ -8,7 +8,7 @@ const SLOTS = 3;
 const MAX_PLAYERS = 6;
 const Draft = {
   packIdx: 0, items: [], idx: 0, players: [], round: 0, auction: null, wins: {}, played: new Set(),
-  settings: Object.assign({ skips: 2 }, store.get("draftSettings", {})),
+  settings: Object.assign({ skips: 2, passes: 5 }, store.get("draftSettings", {})),
 };
 
 // 🎲 Reihenfolge: zufällig, zuletzt gesehene Dinge nach hinten, möglichst nie zweimal dieselbe Kategorie hintereinander
@@ -51,7 +51,7 @@ const draftBoard = (reveal = false) => {
         A.passed.has(i) || (!canBid(p) && i !== A.highBy) ? "out" : "",
       ].join(" ");
       return `<div class="board-row ${cls}">
-        <div class="board-name">${App.avatar(p.name)}<b>${esc(p.name)}</b><span>💶 ${p.money} €</span>${!reveal && Draft.settings.skips ? `<span class="skips">${"⏭️".repeat(p.skips) || "–"}</span>` : ""}${!reveal && A && i === A.highBy ? `<span class="lead-tag">🔨 ${A.high} €</span>` : ""}</div>
+        <div class="board-name">${App.avatar(p.name)}<b>${esc(p.name)}</b><span>💶 ${p.money} €</span>${!reveal ? `<span class="tokens">🙅${passLabel(p.passes)} · ⏭️${p.skips}</span>` : ""}${!reveal && A && i === A.highBy ? `<span class="lead-tag">🔨 ${A.high} €</span>` : ""}</div>
         ${Array.from({ length: SLOTS }, (_, k) => {
           const it = p.items[k];
           return it
@@ -62,6 +62,9 @@ const draftBoard = (reveal = false) => {
     }).join("")}
   </div>`;
 };
+
+const UNLIMITED = 99;
+const passLabel = (n) => (n >= UNLIMITED ? "∞" : n);
 
 const dots = (p) => "●".repeat(p.items.length) + "○".repeat(slotsLeft(p));
 
@@ -103,7 +106,7 @@ App.screens.draftIntro = (i) => {
   Draft.idx = 0;
   Draft.round = 0;
   const S = Draft.settings;
-  Draft.players = shuffle(App.players).map((name) => ({ name, money: BUDGET, items: [], skips: S.skips }));
+  Draft.players = shuffle(App.players).map((name) => ({ name, money: BUDGET, items: [], skips: S.skips, passes: S.passes }));
   const draw = () => {
   App.render(`
     ${topbar("💶 20€ Draft", "draftSetup")}
@@ -116,18 +119,26 @@ App.screens.draftIntro = (i) => {
         <div>🔨 Reihum bieten, Mindestgebot <b>1 €</b></div>
         <div>🎲 Die Dinge kommen in zufälliger Reihenfolge</div>
         <div>☝️ Wer anfängt, muss bieten${S.skips ? " oder überspringen" : ""}</div>
-        <div>🙅 Danach gilt: Wer passt, ist für dieses Ding raus</div>
+        <div>🙅 Danach gilt: Wer passt, ist für dieses Ding raus – Pässe sind begrenzt, ohne Pässe muss man mitbieten</div>
         <div>🔒 Pro freiem Feld bleibt 1 € reserviert → max. <b>18 €</b> fürs erste Ding</div>
         <div>⚡ Hat nur noch eine Person freie Felder, bekommt sie die nächsten Dinge direkt für 1 €</div>
       </div>
-      <h3 class="section">⏭️ Überspringen pro Person</h3>
-      <div class="chips center">${[0, 1, 2, 3].map((k) => `<button class="chip ${k === S.skips ? "on" : ""}" data-sk="${k}">${k === 0 ? "🚫 Nie" : "⏭️".repeat(k)}</button>`).join("")}</div>
+      <h3 class="section">🙅 Passen pro Person</h3>
+      <div class="chips center">${[3, 5, 8, UNLIMITED].map((k) => `<button class="chip ${k === S.passes ? "on" : ""}" data-pa="${k}">${k >= UNLIMITED ? "♾️ Unbegrenzt" : `${k}×`}</button>`).join("")}</div>
+      <h3 class="section">⏭️ Skippen pro Person</h3>
+      <div class="chips center">${[0, 1, 2, 3].map((k) => `<button class="chip ${k === S.skips ? "on" : ""}" data-sk="${k}">${k === 0 ? "🚫 Nie" : `${k}×`}</button>`).join("")}</div>
+      <p class="muted small">Skippen = das Ding wegwerfen, bevor jemand bietet – niemand bekommt's 😈</p>
       <p class="muted">Startreihenfolge: ${Draft.players.map((p) => esc(p.name)).join(" → ")}</p>
       <button class="btn btn-primary wide" id="go">Auktion starten 🔨</button>
     </main>`, { anim: false });
   App.on("[data-sk]", "click", (e, el) => {
     S.skips = +el.dataset.sk; store.set("draftSettings", S);
     Draft.players.forEach((p) => (p.skips = S.skips));
+    draw();
+  });
+  App.on("[data-pa]", "click", (e, el) => {
+    S.passes = +el.dataset.pa; store.set("draftSettings", S);
+    Draft.players.forEach((p) => (p.passes = S.passes));
     draw();
   });
   $("#go").onclick = () => App.show("draftNext");
@@ -210,10 +221,11 @@ App.screens.draftAuction = ({ anim = true } = {}) => {
         <button class="step" id="plus" ${A.value >= hi ? "disabled" : ""}>＋</button>
       </div>
       <div class="bid-btns ${opening && !canSkip ? "solo" : ""}">
-        ${!opening ? `<button class="btn btn-ghost" id="pass">🙅 Passen</button>`
+        ${!opening ? `<button class="btn btn-ghost" id="pass" ${me.passes > 0 ? "" : "disabled"}>🙅 Passen <small>(${passLabel(me.passes)}×)</small></button>`
           : canSkip ? `<button class="btn btn-ghost" id="skip">⏭️ Skip <small>(${me.skips}×)</small></button>` : ""}
         <button class="btn btn-primary" id="bid">🔨 ${opening ? "Eröffnen" : "Bieten"}</button>
       </div>
+      ${!opening && me.passes <= 0 ? `<p class="muted small">Keine Pässe mehr übrig – du musst mitbieten! 💸</p>` : ""}
       ${opening && !canSkip ? `<p class="muted small">${scarce() ? "Es gibt nicht mehr viele Dinge – Überspringen geht nicht mehr." : "Keine Skips mehr übrig – du musst mindestens 1 € bieten."}</p>` : ""}
 
       ${draftBoard()}
@@ -229,7 +241,11 @@ App.screens.draftAuction = ({ anim = true } = {}) => {
   $("#minus").onclick = () => setVal(A.value - 1);
   $("#plus").onclick = () => setVal(A.value + 1);
   $("#bid").onclick = () => { A.high = A.value; A.highBy = A.turn; App.vibrate(25); draftAdvance(); };
-  if (!opening) $("#pass").onclick = () => { A.passed.add(A.turn); draftAdvance(); };
+  if (!opening && me.passes > 0) $("#pass").onclick = () => {
+    if (me.passes < UNLIMITED) me.passes--;
+    A.passed.add(A.turn);
+    draftAdvance();
+  };
   if (canSkip) $("#skip").onclick = () => { me.skips--; App.show("draftSold", -1, 0, false, me.name); };
 };
 
