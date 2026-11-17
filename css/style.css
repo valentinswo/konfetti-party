@@ -306,3 +306,4 @@ input:focus { border-color: var(--accent); }
 .boom h1 { font-size: 3rem; color: #ff6a00; }
 .bid-btns.solo { grid-template-columns: 1fr; }
 .board-name .skips { font-size: 0.7rem; letter-spacing: -2px; opacity: 0.85; }
+.board-name .tokens { font-size: 0.72rem; opacity: 0.85; white-space: nowrap; }
