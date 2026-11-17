@@ -6,7 +6,7 @@ Eine kleine Web-App für Partyabende, ganz ohne Installation, ohne Anmeldung und
 
 | | Spiel | So geht's |
 |---|---|---|
-| 💶 | **20€ Draft** | Auktion: Jede:r hat 20 € und 3 Felder. Die Dinge eines Pakets werden reihum versteigert (mit Plus/Minus, Bieten, Passen oder Überspringen). Zum Schluss wird abgestimmt, wer das beste Team hat. 13 Pakete mit 32–84 Dingen (u. a. das perfekte Leben, der perfekte Garten, das perfekte Stadion, der perfekte Fußballspieler) |
+| 💶 | **20€ Draft** | Auktion: Jede:r hat 20 € und 3 Felder. Die Dinge kommen in zufälliger Reihenfolge und werden reihum versteigert. Wer ein Ding eröffnet, muss bieten oder einen seiner begrenzten Skips nutzen. Danach wird geboten oder gepasst. Hat nur noch eine Person freie Felder, bekommt sie die nächsten Dinge direkt (Pflichtkauf). In jedem Paket stecken auch ein paar Nieten. Zum Schluss wird abgestimmt, wer das beste Team hat. 13 Pakete mit 32–84 Dingen (u. a. das perfekte Leben, der perfekte Garten, das perfekte Stadion, der perfekte Fußballspieler) |
 | 🎭 | **Scharade** | Wie Heads-Up: Handy an die Stirn, nach vorne kippen heißt erraten, nach hinten kippen heißt überspringen (Tippen geht auch). Modi: Pantomime, Erklären, Zeichnen, Geräusche oder gemischt. 18 Kategorien mit ca. 500 Begriffen |
 | 💣 | **Tickende Bombe** | Reihum etwas zur Kategorie sagen und das Handy weitergeben, bis es knallt. Die Zeit ist geheim, das Ticken wird immer schneller. Mit Leben und optionalem Anfangsbuchstaben. 80 Kategorien |
 | 🤔 | **Wer würde eher?** | Frage vorlesen, auf 3 zeigen alle gleichzeitig auf eine Person |
