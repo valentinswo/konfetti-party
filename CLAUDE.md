@@ -4,8 +4,10 @@ Private Partyspiel-Web-App (Deutsch, mobil zuerst). Reines HTML/CSS/JS ohne Buil
 
 ## Spiele & Regeln (so vom Owner gewünscht)
 
-- **💶 20€ Draft (Auktion)**: Jede:r hat 20 € und genau 3 Felder. Die Dinge eines Pakets werden einzeln versteigert. Es wird reihum geboten, und der Startspieler wechselt mit jedem Ding. Bedienung: Stepper mit ＋/−, dann „Bieten“ oder „Passen“. Mindestgebot 1 €. Pro freiem weiterem Feld bleibt 1 € reserviert, das Höchstgebot am Anfang ist also 18 €. Ein Ding kann übersprungen werden, solange noch niemand geboten hat. Spielfeld: eine Zeile pro Person mit 3 Feldern (2 Leute = 2×3, 3 Leute = 3×3). Am Ende stimmt die Gruppe über das beste Team ab. Maximal 6 Spieler:innen. Werden die Dinge knapp und alle passen, geht ein „Restposten“ für 1 € an die Person mit dem meisten Geld.
+- **💶 20€ Draft (Auktion)**: Jede:r hat 20 € und genau 3 Felder. Die Dinge eines Pakets werden einzeln versteigert, in **zufälliger Reihenfolge**. Zuletzt gesehene Dinge kommen nach hinten, und dieselbe Kategorie kommt nie zweimal direkt hintereinander. Es wird reihum geboten, und der Startspieler wechselt mit jedem Ding. Bedienung: Stepper mit ＋/−, dann „Bieten“ oder „Passen“. Mindestgebot 1 €. **Wer ein Ding eröffnet, muss bieten oder einen Skip nutzen.** Passen geht erst nach dem ersten Gebot. Die Skips pro Person sind begrenzt (einstellbar 0–3, Standard 2). Pro freiem weiterem Feld bleibt 1 € reserviert, das Höchstgebot am Anfang ist also 18 €. **Pflichtkauf:** Hat nur noch eine Person freie Felder, bekommt sie die nächsten Dinge direkt für 1 €. Die Anzahl der Dinge wird nie angezeigt. Jedes Paket hat eine **große Auswahl** und **mindestens ein paar Nieten** (Richtpreis 0). Spielfeld: eine Zeile pro Person mit 3 Feldern (2 Leute = 2×3, 3 Leute = 3×3). Am Ende stimmt die Gruppe über das beste Team ab. Maximal 6 Spieler:innen. Werden die Dinge knapp, ist Überspringen gesperrt.
 - **🎭 Scharade**: Wie Heads-Up. Die ratende Person hält das Handy an die Stirn. Nach vorne kippen = erraten, nach hinten kippen = überspringen (über `deviceorientation`, Display-Normale `cos(beta)·cos(gamma)`). Zwischen zwei Aktionen muss das Handy wieder gerade gehalten werden. Tippen bleibt als Alternative. Modi: Pantomime, Erklären, Zeichnen, Geräusche, Gemischt. Spielt in 2–4 Teams mit Timer.
+- **💣 Tickende Bombe**: Eine Kategorie (optional mit Anfangsbuchstabe) wird gezogen. Reihum sagt jede:r etwas Passendes, tippt auf „Weitergeben“ und reicht das Handy weiter. Die Zeit ist geheim, und das Ticken wird schneller. Wer das Handy beim Knall hält, verliert ein Leben (1–3). Die Person ist danach korrigierbar. Die letzte Person mit Leben gewinnt.
+- **🧑‍🎤 Avatare**: Jede:r Spieler:in hat ein Emoji-Avatar auf einem farbigen Kreis (`App.avatar(name)`). Antippen in der Spielerliste ändert es.
 - **🤔 Wer würde eher?**, **🙈 Ich hab noch nie**, **🔥 Wahrheit oder Pflicht**: Stufen 😇 mild und 🌶️ spicy (spicy bleibt jugendfrei-frech, nicht explizit).
 
 ## Design
@@ -15,7 +17,7 @@ Dunkler Hintergrund, bunte Verlaufs-Kacheln, große abgerundete Buttons, überal
 ## Aufbau
 
 - `js/app.js`: Navigation (`App.show(screen, ...args)`, `App.render`), Spielerliste, Startseite (`GAMES`)
-- `js/draft.js`, `js/charades.js`, `js/cards.js`: je ein Spiel
+- `js/draft.js`, `js/charades.js`, `js/cards.js`, `js/bomb.js`: je ein Spiel
 - `js/data/*.js`: alle Inhalte als einfache Listen
 - `tools/check-data.js`: Inhalts-Check. Läuft in der GitHub Action „Inhalte prüfen“ und als Netlify-Build-Befehl.
 
