@@ -1,0 +1,4 @@
+# Netlify: Repo verbinden → jeder Pull Request bekommt automatisch eine Vorschau-URL.
+[build]
+  publish = "."
+  command = "node tools/check-data.js"
