@@ -307,3 +307,82 @@ input:focus { border-color: var(--accent); }
 .bid-btns.solo { grid-template-columns: 1fr; }
 .board-name .skips { font-size: 0.7rem; letter-spacing: -2px; opacity: 0.85; }
 .board-name .tokens { font-size: 0.72rem; opacity: 0.85; white-space: nowrap; }
+
+/* 🎨 20€ Draft – Bilder-Szenen */
+.art { position: relative; overflow: hidden; border-radius: 22px; display: grid; place-items: center; isolation: isolate;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.18), inset 0 -30px 40px rgba(0, 0, 0, 0.12); }
+.art::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; } /* Muster-Ebene */
+.art-main { font-size: 84px; line-height: 1; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.3)); z-index: 1; }
+.art-d { position: absolute; line-height: 1; filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.25)); }
+.art-d.d0 { left: 9%; bottom: 10%; font-size: 40px; transform: rotate(-8deg); }
+.art-d.d1 { right: 9%; top: 10%; font-size: 36px; transform: rotate(8deg); }
+.art-d.d2 { right: 11%; bottom: 9%; font-size: 32px; }
+.art.big { width: 100%; aspect-ratio: 16 / 10; max-height: 220px; margin: 4px 0; }
+.art.big .art-main { animation: floaty 3s ease-in-out infinite; }
+@keyframes floaty { 50% { transform: translateY(-6px) rotate(-2deg); } }
+.art.mini { width: 100%; flex: 1; min-height: 0; border-radius: 10px; box-shadow: none; }
+.art.mini .art-main { font-size: 24px; }
+.art.mini .art-d.d0 { font-size: 13px; left: 4px; bottom: 3px; }
+.cell.filled { padding: 4px; gap: 3px; justify-content: flex-start; }
+.cell.filled .cell-n { font-size: 0.6rem; }
+.sold-art { position: relative; width: 100%; margin-top: 10px; }
+.sold-badge { position: absolute; right: -6px; top: -14px; font-size: 54px; animation: bounce 1s ease infinite alternate; filter: drop-shadow(0 6px 8px rgba(0,0,0,.35)); }
+.auction-item .art.big { box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.3), 0 10px 22px rgba(0, 0, 0, 0.25); }
+
+/* Hintergründe */
+.sc-water   { background: linear-gradient(180deg, #7fe0ff, #1f8fe0 60%, #0b5cb3); }
+.sc-water::after, .sc-pool::after, .sc-pond::after {
+  background: repeating-radial-gradient(ellipse at 50% 120%, transparent 0 14px, rgba(255,255,255,.18) 14px 16px); }
+.sc-pool    { background: linear-gradient(180deg, #e9f7ff 0 18%, #49d3f5 18%, #1aa7e0 70%, #0f7fc4); }
+.sc-pond    { background: linear-gradient(180deg, #9be27a 0 20%, #3fb48a 20%, #237f86 70%, #1b5f6e); }
+.sc-grass   { background: linear-gradient(180deg, #a7e6ff 0 35%, #7bd65b 35%, #3fa63e); }
+.sc-garden  { background: linear-gradient(180deg, #bdeaff 0 30%, #8bdc6a 30%, #46ad4c); }
+.sc-garden::after { background: radial-gradient(circle at 15% 80%, #ff8fc8 0 4px, transparent 5px), radial-gradient(circle at 80% 85%, #ffe066 0 4px, transparent 5px), radial-gradient(circle at 55% 92%, #fff 0 3px, transparent 4px); }
+.sc-meadow  { background: linear-gradient(180deg, #8fd8ff 0 40%, #b8ea6e 40%, #6cc24a); }
+.sc-meadow::after { background: radial-gradient(circle at 20% 75%, #fff36b 0 3px, transparent 4px), radial-gradient(circle at 70% 82%, #ff9ad5 0 3px, transparent 4px), radial-gradient(circle at 40% 90%, #fff 0 3px, transparent 4px), radial-gradient(circle at 88% 70%, #fff36b 0 3px, transparent 4px); }
+.sc-forest  { background: linear-gradient(180deg, #7fcf8f, #2f8f55 55%, #1c5c3a); }
+.sc-farm    { background: linear-gradient(180deg, #ffe3a3 0 35%, #c6e07a 35%, #8bbf4a); }
+.sc-sky     { background: linear-gradient(180deg, #5fb8ff, #a9dcff); }
+.sc-sky::after { background: radial-gradient(ellipse 60px 18px at 20% 25%, rgba(255,255,255,.9), transparent 70%), radial-gradient(ellipse 80px 22px at 78% 70%, rgba(255,255,255,.75), transparent 70%); }
+.sc-sunset  { background: linear-gradient(180deg, #6a4bd6, #ff6f91 55%, #ffc36b); }
+.sc-night, .sc-space { background: linear-gradient(180deg, #1c1747, #2d2470 70%, #3b2f8f); }
+.sc-space   { background: radial-gradient(circle at 75% 30%, #5b3fd6 0, transparent 45%), linear-gradient(180deg, #0a0820, #1b1446); }
+.sc-night::after, .sc-space::after { background:
+  radial-gradient(circle at 12% 20%, #fff 0 1.5px, transparent 2px), radial-gradient(circle at 30% 60%, #fff 0 1px, transparent 2px),
+  radial-gradient(circle at 55% 15%, #fff 0 1.5px, transparent 2px), radial-gradient(circle at 70% 45%, #fff 0 1px, transparent 2px),
+  radial-gradient(circle at 88% 22%, #fff 0 1.5px, transparent 2px), radial-gradient(circle at 92% 75%, #fff 0 1px, transparent 2px),
+  radial-gradient(circle at 40% 85%, #fff 0 1px, transparent 2px), radial-gradient(circle at 8% 70%, #fff 0 1px, transparent 2px); }
+.sc-city    { background: linear-gradient(180deg, #8ec5ff 0 55%, #5a6fd6 55%, #3b4aa8); }
+.sc-city::after { background: repeating-linear-gradient(90deg, rgba(255,255,255,.12) 0 18px, transparent 18px 30px); clip-path: polygon(0 100%, 0 60%, 12% 60%, 12% 40%, 24% 40%, 24% 55%, 38% 55%, 38% 30%, 50% 30%, 50% 50%, 64% 50%, 64% 38%, 78% 38%, 78% 58%, 90% 58%, 90% 45%, 100% 45%, 100% 100%); }
+.sc-home    { background: linear-gradient(180deg, #ffe2b8 0 70%, #d9905a 70%); }
+.sc-kitchen { background: linear-gradient(180deg, #fff3d6 0 62%, #e9b77a 62%); }
+.sc-kitchen::after { background: repeating-conic-gradient(rgba(255,255,255,.35) 0 25%, transparent 0 50%) 0 0 / 16px 16px; clip-path: inset(0 0 40% 0); }
+.sc-beach   { background: linear-gradient(180deg, #6fd3ff 0 45%, #2fb3e8 45% 62%, #ffe08a 62%); }
+.sc-island  { background: radial-gradient(ellipse 45% 18% at 50% 72%, #ffe08a 0 98%, transparent 100%), linear-gradient(180deg, #7fdcff 0 45%, #1fb0d8 45%); }
+.sc-sand    { background: linear-gradient(180deg, #ffeab0, #f2c46d); }
+.sc-pitch   { background: repeating-linear-gradient(90deg, #3fae4f 0 26px, #36a046 26px 52px); }
+.sc-pitch::after { background: radial-gradient(circle at 50% 50%, transparent 0 30px, rgba(255,255,255,.55) 31px 33px, transparent 34px), linear-gradient(90deg, transparent calc(50% - 1px), rgba(255,255,255,.55) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)); }
+.sc-stadium { background: linear-gradient(180deg, #2a2f6b 0 22%, #5a63c9 22% 45%, #3fae4f 45%); }
+.sc-stadium::after { background: radial-gradient(circle at 10% 10%, #fff8 0 6px, transparent 14px), radial-gradient(circle at 90% 10%, #fff8 0 6px, transparent 14px), repeating-linear-gradient(90deg, rgba(255,255,255,.15) 0 3px, transparent 3px 9px); clip-path: inset(0 0 55% 0); }
+.sc-money   { background: linear-gradient(135deg, #7be08f, #2c9b54); }
+.sc-gold    { background: radial-gradient(circle at 30% 25%, #fff3b0, transparent 40%), linear-gradient(135deg, #ffd85c, #e09b00); }
+.sc-fire    { background: radial-gradient(ellipse at 50% 110%, #ffde59, #ff7a1a 45%, #c8102e); }
+.sc-snow    { background: linear-gradient(180deg, #cfe9ff, #ffffff); }
+.sc-mountain { background: linear-gradient(160deg, transparent 55%, #fff 55% 62%, #7d8fb3 62%), linear-gradient(200deg, transparent 50%, #e8f0ff 50% 58%, #5f6f99 58%), linear-gradient(180deg, #8fd0ff, #d6efff); }
+.sc-party   { background: linear-gradient(135deg, #ff5fc8, #7b4bff); }
+.sc-party::after { background: radial-gradient(circle at 15% 20%, #ffe066 0 4px, transparent 5px), radial-gradient(circle at 80% 25%, #66f0ff 0 4px, transparent 5px), radial-gradient(circle at 30% 80%, #fff 0 3px, transparent 4px), radial-gradient(circle at 75% 80%, #ffe066 0 3px, transparent 4px); }
+.sc-disco   { background: conic-gradient(from 0deg at 50% 0%, #ff4fd8, #6a3cff, #20d8ff, #ff4fd8); }
+.sc-food    { background: linear-gradient(135deg, #ffd37a, #ff8a3d); }
+.sc-love    { background: linear-gradient(135deg, #ffc2dd, #ff5c93); }
+.sc-court   { background: linear-gradient(180deg, #ffb36b, #d9692a); }
+.sc-tech    { background: linear-gradient(135deg, #4de3ff, #3a4cff); }
+.sc-tech::after { background: linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px) 0 0 / 14px 14px, linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px) 0 0 / 14px 14px; }
+.sc-dark    { background: radial-gradient(circle at 50% 30%, #5d6b4f, #1a2016 75%); }
+.sc-desert  { background: linear-gradient(180deg, #ffd9a0 0 55%, #e3a04f 55%); }
+.sc-road    { background: linear-gradient(180deg, #9fdcff 0 50%, #555b66 50%); }
+.sc-road::after { background: linear-gradient(90deg, transparent 0 10%, #fff 10% 22%, transparent 22% 40%, #fff 40% 52%, transparent 52% 70%, #fff 70% 82%, transparent 82%); clip-path: inset(74% 0 22% 0); }
+.sc-volcano { background: linear-gradient(180deg, #ff9a5a, #8a2b1a 60%, #3a1410); }
+.sc-lab     { background: linear-gradient(180deg, #eaf4ff, #b9d2ea); }
+.sc-spa     { background: linear-gradient(180deg, #e9fff4, #a8e6cf); }
+.sc-studio  { background: radial-gradient(circle at 50% 35%, #8f7bff, #3a2f8f 70%); }
+.sc-grey    { background: linear-gradient(180deg, #a3a3ad, #6c6c78); }

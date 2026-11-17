@@ -4,6 +4,9 @@ const packs = require(path.join(__dirname, "../js/data/draft-packs.js"));
 const cats = require(path.join(__dirname, "../js/data/charades-words.js"));
 const cards = require(path.join(__dirname, "../js/data/card-games.js"));
 const bombCats = require(path.join(__dirname, "../js/data/bomb-categories.js"));
+const { DRAFT_SCENES, DRAFT_ART } = require(path.join(__dirname, "../js/data/draft-art.js"));
+const css = require("fs").readFileSync(path.join(__dirname, "../css/style.css"), "utf8");
+const sceneNames = new Set([...css.matchAll(/\.sc-([a-z]+)/g)].map((m) => m[1]));
 
 const errors = [];
 const ids = new Set();
@@ -49,6 +52,20 @@ for (const [id, g] of Object.entries(cards)) {
   }
 }
 
+// 🎨 Bilder-Szenen prüfen
+const itemNames = new Set(packs.flatMap((p) => p.slots.flatMap((s) => s.options.map((o) => o[1]))));
+const slotKeys = new Set(packs.flatMap((p) => [p.id, ...p.slots.map((s) => `${p.id}:${s.name}`)]));
+for (const [k, bg] of Object.entries(DRAFT_SCENES)) {
+  if (!slotKeys.has(k)) errors.push(`Bilder: Szene "${k}" passt zu keinem Paket/keiner Kategorie`);
+  if (!sceneNames.has(bg)) errors.push(`Bilder: Hintergrund "${bg}" (bei "${k}") gibt es nicht im CSS`);
+}
+for (const [name, val] of Object.entries(DRAFT_ART)) {
+  if (!itemNames.has(name)) errors.push(`Bilder: "${name}" gibt es in keinem Paket (Tippfehler?)`);
+  const bg = val.split("|")[2];
+  if (bg && !sceneNames.has(bg)) errors.push(`Bilder: Hintergrund "${bg}" (bei "${name}") gibt es nicht im CSS`);
+}
+const withArt = [...itemNames].filter((n) => DRAFT_ART[n]).length;
+
 const bombSeen = new Set();
 for (const c of bombCats) {
   if (!Array.isArray(c) || c.length < 2 || !c[0] || !c[1]) errors.push(`Bombe: Kategorie ${JSON.stringify(c)} muss [Emoji, Name] sein`);
@@ -62,4 +79,4 @@ if (errors.length) {
   process.exit(1);
 }
 const words = cats.reduce((n, c) => n + c.words.length, 0);
-console.log(`✅ Alles gut: ${packs.length} Draft-Pakete, ${cats.length} Scharade-Kategorien (${words} Begriffe), ${Object.keys(cards).length} Kartenspiele, ${bombCats.length} Bomben-Kategorien.`);
+console.log(`✅ Alles gut: ${packs.length} Draft-Pakete, ${cats.length} Scharade-Kategorien (${words} Begriffe), ${Object.keys(cards).length} Kartenspiele, ${bombCats.length} Bomben-Kategorien, ${withArt}/${itemNames.size} Draft-Dinge mit eigenem Bild.`);
