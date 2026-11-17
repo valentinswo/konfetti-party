@@ -73,7 +73,7 @@ App.screens.wopTurn = () => {
     ${topbar("🔥 Wahrheit oder Pflicht", "home")}
     <main class="wrap center">
       <div class="big-emoji">🫵</div>
-      <h1 class="name">${name ? esc(name) : "Du"}</h1>
+      <h1 class="name">${name ? App.avatar(name, "big") + " " + esc(name) : "Du"}</h1>
       <p class="lead">${name ? "ist dran! Was nimmst du?" : "bist dran! Was nimmst du?"}</p>
       <div class="choice">
         <button class="tile g-blue" data-kind="truth"><span class="tile-emoji">💬</span><span class="tile-title">Wahrheit</span></button>

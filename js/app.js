@@ -31,6 +31,7 @@ const App = {
   start() {
     this.root = $("#app");
     this.players = store.get("players", []);
+    this.avatars = store.get("avatars", {});
     this.root.addEventListener("click", (e) => {
       const go = e.target.closest("[data-go]");
       if (go && !go.disabled) this.show(go.dataset.go);
@@ -99,6 +100,24 @@ const App = {
     setTimeout(() => box.remove(), 3500);
   },
 
+  // 🧑‍🎤 Avatare: jede Person bekommt ein Emoji-Bild mit Farbe (antippen in der Spielerliste ändert es)
+  AVATARS: ["🧑‍🎤", "👩‍🚀", "🧑‍🍳", "🦸", "🧙", "🧛", "🥷", "🤠", "👸", "🤴", "🧜‍♀️", "🧑‍🎨", "🧝", "🧞", "🦹", "🧑‍🚒", "🕵️", "💃", "🕺", "🧑‍🚀", "🐶", "🐱", "🦊", "🐼", "🐸", "🦄", "🐵", "🐯", "🐨", "🐷"],
+  avatars: {},
+  avatarOf(name) {
+    if (!this.avatars[name]) {
+      const used = new Set(this.players.map((p) => this.avatars[p]).filter(Boolean));
+      const free = this.AVATARS.filter((a) => !used.has(a));
+      this.avatars[name] = pick(free.length ? free : this.AVATARS);
+      store.set("avatars", this.avatars);
+    }
+    return this.avatars[name];
+  },
+  avatar(name, size = "") {
+    const e = this.avatarOf(name);
+    const hue = [...name].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
+    return `<span class="ava ${size}" style="--h:${hue}">${e}</span>`;
+  },
+
   // Zufälligen Spielernamen in {name} einsetzen
   fill(text, exclude) {
     if (!text.includes("{name}")) return text;
@@ -113,7 +132,8 @@ const GAMES = [
   { screen: "charSetup", emoji: "🎭", title: "Scharade", sub: "Pantomime, Erklären, Zeichnen …", cls: "g-purple", big: true },
   { screen: "cards:wwe", emoji: "🤔", title: "Wer würde eher?", sub: "Zeigt auf die Person!", cls: "g-blue" },
   { screen: "cards:ihnn", emoji: "🙈", title: "Ich hab noch nie", sub: "Geständnisse garantiert", cls: "g-pink" },
-  { screen: "cards:wop", emoji: "🔥", title: "Wahrheit oder Pflicht", sub: "Der Klassiker", cls: "g-red wide" },
+  { screen: "bombSetup", emoji: "💣", title: "Tickende Bombe", sub: "Schnell sein – sonst BOOM!", cls: "g-fire" },
+  { screen: "cards:wop", emoji: "🔥", title: "Wahrheit oder Pflicht", sub: "Der Klassiker", cls: "g-red" },
 ];
 
 App.screens.home = () => {
@@ -125,7 +145,7 @@ App.screens.home = () => {
         <h1>Konfetti</h1>
         <p class="muted">Partyspiele für eure Runde</p>
       </div>
-      <button class="players-chip" data-go="players">👥 ${n ? `${n} Spieler:innen` : "Spieler:innen hinzufügen"} <span>✏️</span></button>
+      <button class="players-chip" data-go="players">${n ? `<span class="ava-stack">${App.players.slice(0, 5).map((p) => App.avatar(p)).join("")}</span> ${n} Spieler:innen` : "👥 Spieler:innen hinzufügen"} <span>✏️</span></button>
       <div class="games">
         ${GAMES.map((g) => `
           <button class="tile ${g.cls} ${g.big ? "big" : ""}" data-game="${g.screen}">
@@ -153,9 +173,10 @@ App.screens.players = () => {
           <button class="btn btn-primary btn-small" type="submit">＋</button>
         </form>
         <ul class="player-list">
-          ${App.players.map((p, i) => `<li><span>${["😎", "🤪", "🥳", "😈", "🤠", "👻", "🦄", "🐸", "🦊", "🐼"][i % 10]} ${esc(p)}</span><button class="icon-btn small" data-del="${i}" aria-label="Entfernen">✕</button></li>`).join("")}
+          ${App.players.map((p, i) => `<li><button class="ava-btn" data-ava="${i}" aria-label="Bild ändern">${App.avatar(p, "big")}</button><span class="pname">${esc(p)}</span><button class="icon-btn small" data-del="${i}" aria-label="Entfernen">✕</button></li>`).join("")}
         </ul>
-        ${App.players.length < 2 ? `<p class="muted center">Mindestens 2 Leute für den 20€ Draft.</p>` : ""}
+        ${App.players.length ? `<p class="muted center small">Tipp aufs Bild, um es zu ändern 🎨</p>` : ""}
+        ${App.players.length < 2 ? `<p class="muted center">Mindestens 2 Leute für den 20€ Draft und die Bombe.</p>` : ""}
         <button class="btn btn-primary wide" data-go="home">Fertig ✅</button>
       </main>`, { anim: false });
     const input = $("#nameInput");
@@ -165,6 +186,13 @@ App.screens.players = () => {
       if (name && !App.players.includes(name)) { App.players.push(name); App.savePlayers(); }
       draw();
       $("#nameInput").focus();
+    });
+    App.on("[data-ava]", "click", (e, el) => {
+      const name = App.players[+el.dataset.ava];
+      const list = App.AVATARS;
+      App.avatars[name] = list[(list.indexOf(App.avatarOf(name)) + 1) % list.length];
+      store.set("avatars", App.avatars);
+      draw();
     });
     App.on("[data-del]", "click", (e, el) => { App.players.splice(+el.dataset.del, 1); App.savePlayers(); draw(); });
   };
