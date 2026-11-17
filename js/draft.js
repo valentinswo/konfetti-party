@@ -55,11 +55,34 @@ const draftBoard = (reveal = false) => {
         ${Array.from({ length: SLOTS }, (_, k) => {
           const it = p.items[k];
           return it
-            ? `<div class="cell filled"><span class="cell-e">${it.e}</span><span class="cell-n">${esc(it.n)}</span><span class="price">${it.price} €</span></div>`
+            ? `<div class="cell filled">${artHtml(it, "mini")}<span class="cell-n">${esc(it.n)}</span><span class="price">${it.price} €</span></div>`
             : `<div class="cell empty"><span>＋</span></div>`;
         }).join("")}
       </div>`;
     }).join("")}
+  </div>`;
+};
+
+// 🎨 Szene für ein Ding: Hintergrund + Haupt-Emoji + Deko (siehe js/data/draft-art.js)
+const splitEmoji = (str) => {
+  if (!str) return [];
+  try { return [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(str)].map((x) => x.segment); }
+  catch { return Array.from(str); }
+};
+const artOf = (it) => {
+  const pack = DRAFT_PACKS[Draft.packIdx];
+  const [main, deco, bg] = (DRAFT_ART[it.n] || "").split("|");
+  return {
+    main: main || it.e,
+    deco: splitEmoji(deco).slice(0, 3),
+    bg: bg || DRAFT_SCENES[`${pack.id}:${it.cat.name}`] || DRAFT_SCENES[pack.id] || "sky",
+  };
+};
+const artHtml = (it, size = "") => {
+  const a = artOf(it);
+  return `<div class="art sc-${a.bg} ${size}">
+    <span class="art-main">${a.main}</span>
+    ${(size === "mini" ? a.deco.slice(0, 1) : a.deco).map((d, i) => `<span class="art-d d${i}">${d}</span>`).join("")}
   </div>`;
 };
 
@@ -118,8 +141,9 @@ App.screens.draftIntro = (i) => {
         <div>🧩 Jede:r braucht genau <b>3 Dinge</b></div>
         <div>🔨 Reihum bieten, Mindestgebot <b>1 €</b></div>
         <div>🎲 Die Dinge kommen in zufälliger Reihenfolge</div>
-        <div>☝️ Wer anfängt, muss bieten${S.skips ? " oder überspringen" : ""}</div>
-        <div>🙅 Danach gilt: Wer passt, ist für dieses Ding raus – Pässe sind begrenzt, ohne Pässe muss man mitbieten</div>
+        <div>🙅 Wer passt, ist für dieses Ding raus – Pässe sind begrenzt, ohne Pässe muss man bieten</div>
+        <div>⏭️ Solange noch niemand geboten hat, kann man ein Ding wegskippen – dann bekommt es niemand</div>
+        <div>🤷 Passen alle, ohne dass jemand bietet, fliegt das Ding auch raus</div>
         <div>🔒 Pro freiem Feld bleibt 1 € reserviert → max. <b>18 €</b> fürs erste Ding</div>
         <div>⚡ Hat nur noch eine Person freie Felder, bekommt sie die nächsten Dinge direkt für 1 €</div>
       </div>
@@ -194,7 +218,7 @@ App.screens.draftAuction = ({ anim = true } = {}) => {
   const me = Draft.players[A.turn];
   const lo = minBid(), hi = maxBid(me);
   A.value = Math.min(Math.max(A.value, lo), hi);
-  const opening = A.high === 0; // Eröffnung: bieten oder (falls übrig) überspringen – Passen gibt's erst danach
+  const opening = A.high === 0; // Skippen geht nur, solange noch niemand geboten hat
   const canSkip = opening && me.skips > 0 && !scarce();
 
   App.render(`
@@ -202,7 +226,7 @@ App.screens.draftAuction = ({ anim = true } = {}) => {
     <main class="wrap center">
       <div class="auction-item ${pack.color}">
         <span class="cat">${A.item.cat.emoji} ${esc(A.item.cat.name)}</span>
-        <span class="auction-emoji">${A.item.e}</span>
+        ${artHtml(A.item, "big")}
         <span class="auction-name">${esc(A.item.n)}</span>
       </div>
       <div class="high">${A.highBy >= 0
@@ -220,13 +244,12 @@ App.screens.draftAuction = ({ anim = true } = {}) => {
         <div class="step-val"><span id="val">${A.value}</span> €</div>
         <button class="step" id="plus" ${A.value >= hi ? "disabled" : ""}>＋</button>
       </div>
-      <div class="bid-btns ${opening && !canSkip ? "solo" : ""}">
-        ${!opening ? `<button class="btn btn-ghost" id="pass" ${me.passes > 0 ? "" : "disabled"}>🙅 Passen <small>(${passLabel(me.passes)}×)</small></button>`
-          : canSkip ? `<button class="btn btn-ghost" id="skip">⏭️ Skip <small>(${me.skips}×)</small></button>` : ""}
-        <button class="btn btn-primary" id="bid">🔨 ${opening ? "Eröffnen" : "Bieten"}</button>
+      <div class="bid-btns">
+        <button class="btn btn-ghost" id="pass" ${me.passes > 0 ? "" : "disabled"}>🙅 Passen <small>(${passLabel(me.passes)}×)</small></button>
+        <button class="btn btn-primary" id="bid">🔨 Bieten</button>
       </div>
-      ${!opening && me.passes <= 0 ? `<p class="muted small">Keine Pässe mehr übrig – du musst mitbieten! 💸</p>` : ""}
-      ${opening && !canSkip ? `<p class="muted small">${scarce() ? "Es gibt nicht mehr viele Dinge – Überspringen geht nicht mehr." : "Keine Skips mehr übrig – du musst mindestens 1 € bieten."}</p>` : ""}
+      ${canSkip ? `<button class="btn btn-ghost btn-small wide" id="skip">⏭️ Wegskippen – niemand bekommt's <small>(${me.skips}× übrig)</small></button>` : ""}
+      ${me.passes <= 0 ? `<p class="muted small">Keine Pässe mehr übrig – du musst bieten! 💸</p>` : ""}
 
       ${draftBoard()}
     </main>`, { anim });
@@ -241,7 +264,7 @@ App.screens.draftAuction = ({ anim = true } = {}) => {
   $("#minus").onclick = () => setVal(A.value - 1);
   $("#plus").onclick = () => setVal(A.value + 1);
   $("#bid").onclick = () => { A.high = A.value; A.highBy = A.turn; App.vibrate(25); draftAdvance(); };
-  if (!opening && me.passes > 0) $("#pass").onclick = () => {
+  if (me.passes > 0) $("#pass").onclick = () => {
     if (me.passes < UNLIMITED) me.passes--;
     A.passed.add(A.turn);
     draftAdvance();
@@ -259,14 +282,14 @@ App.screens.draftSold = (winner, price, forced, skipper) => {
   }
   App.render(`
     <main class="wrap center">
-      <div class="big-emoji bounce">${winner < 0 ? "🗑️" : forced === "pflicht" ? "⚡" : "🔨"}</div>
-      <p class="lead">${A.item.e} <b>${esc(A.item.n)}</b></p>
+      <div class="sold-art">${artHtml(A.item, "big")}<span class="sold-badge">${winner < 0 ? "🗑️" : forced === "pflicht" ? "⚡" : "🔨"}</span></div>
+      <p class="lead"><b>${esc(A.item.n)}</b></p>
       ${winner >= 0
         ? `<p class="muted">${forced === "pflicht" ? "⚡ Pflichtkauf – alle anderen sind voll! Geht direkt an"
             : forced === "rest" ? "Restposten 🛒 geht automatisch an" : "Verkauft an"}</p>
            <h1 class="name">${App.avatar(Draft.players[winner].name, "big")} ${esc(Draft.players[winner].name)}</h1>
            <p class="lead">für <b>${price} €</b></p>`
-        : `<h1 class="name">Übersprungen ⏭️</h1><p class="muted">${skipper ? `${esc(skipper)} hat es weggeskippt – niemand bekommt's.` : "Niemand bekommt's."}</p>`}
+        : `<h1 class="name">${skipper ? "Weggeskippt ⏭️" : "Keiner wollte es 🤷"}</h1><p class="muted">${skipper ? `${esc(skipper)} hat es weggeskippt – niemand bekommt's.` : "Alle haben gepasst – niemand bekommt's."}</p>`}
       ${draftBoard(true)}
       <button class="btn btn-primary wide" id="go">Weiter ➡️</button>
     </main>`);
