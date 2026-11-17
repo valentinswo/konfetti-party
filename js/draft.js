@@ -26,7 +26,7 @@ const draftBoard = (reveal = false) => {
         A.passed.has(i) || (!canBid(p) && i !== A.highBy) ? "out" : "",
       ].join(" ");
       return `<div class="board-row ${cls}">
-        <div class="board-name"><b>${esc(p.name)}</b><span>💶 ${p.money} €</span>${!reveal && A && i === A.highBy ? `<span class="lead-tag">🔨 ${A.high} €</span>` : ""}</div>
+        <div class="board-name">${App.avatar(p.name)}<b>${esc(p.name)}</b><span>💶 ${p.money} €</span>${!reveal && A && i === A.highBy ? `<span class="lead-tag">🔨 ${A.high} €</span>` : ""}</div>
         ${Array.from({ length: SLOTS }, (_, k) => {
           const it = p.items[k];
           return it
@@ -145,7 +145,7 @@ App.screens.draftAuction = ({ anim = true } = {}) => {
   const canSkip = A.high === 0 && !scarce();
 
   App.render(`
-    ${topbar(`${pack.emoji} Ding ${Draft.idx + 1} / ${Draft.items.length}`, "draftSetup")}
+    ${topbar(`${pack.emoji} Ding ${Draft.idx + 1}`, "draftSetup")}
     <main class="wrap center">
       <div class="auction-item ${pack.color}">
         <span class="cat">${A.item.cat.emoji} ${esc(A.item.cat.name)}</span>
@@ -158,7 +158,7 @@ App.screens.draftAuction = ({ anim = true } = {}) => {
 
       <div class="turn">
         <p class="muted">Am Zug</p>
-        <h2 class="name">${esc(me.name)}</h2>
+        <h2 class="name">${App.avatar(me.name, "big")} ${esc(me.name)}</h2>
         <p class="muted small">💶 ${me.money} € · ${dots(me)} · max. ${hi} € möglich</p>
       </div>
 
@@ -204,7 +204,7 @@ App.screens.draftSold = (winner, price, forced) => {
       <p class="lead">${A.item.e} <b>${esc(A.item.n)}</b></p>
       ${winner >= 0
         ? `<p class="muted">${forced ? "Restposten 🛒 geht automatisch an" : "Verkauft an"}</p>
-           <h1 class="name">${esc(Draft.players[winner].name)}</h1>
+           <h1 class="name">${App.avatar(Draft.players[winner].name, "big")} ${esc(Draft.players[winner].name)}</h1>
            <p class="lead">für <b>${price} €</b></p>`
         : `<h1 class="name">Niemand!</h1><p class="muted">Das Ding fliegt raus.</p>`}
       ${draftBoard(true)}
@@ -223,7 +223,7 @@ App.screens.draftReveal = () => {
       ${draftBoard(true)}
       <h3 class="section center">🗳️ Wer hat das beste Team?</h3>
       <div class="vote">
-        ${Draft.players.map((t, i) => `<button class="btn btn-ghost" data-win="${i}">🏆 ${esc(t.name)}</button>`).join("")}
+        ${Draft.players.map((t, i) => `<button class="btn btn-ghost" data-win="${i}">🏆 ${App.avatar(t.name)} ${esc(t.name)}</button>`).join("")}
       </div>
     </main>`);
   App.on("[data-win]", "click", (e, el) => App.show("draftWinner", Draft.players[+el.dataset.win].name));
@@ -237,7 +237,7 @@ App.screens.draftWinner = (name) => {
     <main class="wrap center">
       <div class="big-emoji bounce">🏆</div>
       <p class="muted">Gewinner:in der Runde</p>
-      <h1 class="name">${esc(name)}</h1>
+      <h1 class="name">${App.avatar(name, "big")} ${esc(name)}</h1>
       <div class="scoreboard">
         ${board.map(([n, w], i) => `<div class="score-row"><span>${["🥇", "🥈", "🥉"][i] || "🎖️"} ${esc(n)}</span><b>${w}</b></div>`).join("")}
       </div>

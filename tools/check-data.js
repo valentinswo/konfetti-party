@@ -3,6 +3,7 @@ const path = require("path");
 const packs = require(path.join(__dirname, "../js/data/draft-packs.js"));
 const cats = require(path.join(__dirname, "../js/data/charades-words.js"));
 const cards = require(path.join(__dirname, "../js/data/card-games.js"));
+const bombCats = require(path.join(__dirname, "../js/data/bomb-categories.js"));
 
 const errors = [];
 const ids = new Set();
@@ -46,9 +47,17 @@ for (const [id, g] of Object.entries(cards)) {
   }
 }
 
+const bombSeen = new Set();
+for (const c of bombCats) {
+  if (!Array.isArray(c) || c.length < 2 || !c[0] || !c[1]) errors.push(`Bombe: Kategorie ${JSON.stringify(c)} muss [Emoji, Name] sein`);
+  if (bombSeen.has(c[1])) errors.push(`Bombe: "${c[1]}" ist doppelt`);
+  bombSeen.add(c[1]);
+}
+if (bombCats.length < 20) errors.push("Bombe: mindestens 20 Kategorien nötig");
+
 if (errors.length) {
   console.error("❌ Fehler gefunden:\n- " + errors.join("\n- "));
   process.exit(1);
 }
 const words = cats.reduce((n, c) => n + c.words.length, 0);
-console.log(`✅ Alles gut: ${packs.length} Draft-Pakete, ${cats.length} Scharade-Kategorien (${words} Begriffe), ${Object.keys(cards).length} Kartenspiele.`);
+console.log(`✅ Alles gut: ${packs.length} Draft-Pakete, ${cats.length} Scharade-Kategorien (${words} Begriffe), ${Object.keys(cards).length} Kartenspiele, ${bombCats.length} Bomben-Kategorien.`);
