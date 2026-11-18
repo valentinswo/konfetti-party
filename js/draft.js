@@ -79,6 +79,9 @@ const artOf = (it) => {
   };
 };
 const artHtml = (it, size = "") => {
+  // 🖼️ Echtes Bild vorhanden (js/data/draft-images.js)? Dann das zeigen, sonst die Emoji-Szene.
+  const img = typeof DRAFT_IMAGES !== "undefined" && DRAFT_IMAGES[it.n];
+  if (img) return `<div class="pic ${size}"><img src="${img}" alt="" loading="lazy" decoding="async"></div>`;
   const a = artOf(it);
   return `<div class="art sc-${a.bg} ${size}">
     <span class="art-main">${a.main}</span>
@@ -224,10 +227,12 @@ App.screens.draftAuction = ({ anim = true } = {}) => {
   App.render(`
     ${topbar(`${pack.emoji} ${esc(pack.title)}`, "draftSetup")}
     <main class="wrap center">
-      <div class="auction-item ${pack.color}">
-        <span class="cat">${A.item.cat.emoji} ${esc(A.item.cat.name)}</span>
-        ${artHtml(A.item, "big")}
-        <span class="auction-name">${esc(A.item.n)}</span>
+      <div class="auction-item">
+        <div class="ai-pic">${artHtml(A.item, "big")}</div>
+        <div class="ai-text">
+          <span class="cat">${A.item.cat.emoji} ${esc(A.item.cat.name)}</span>
+          <span class="auction-name">${esc(A.item.n)}</span>
+        </div>
       </div>
       <div class="high">${A.highBy >= 0
         ? `🔨 Höchstgebot: <b>${A.high} €</b> von <b>${esc(Draft.players[A.highBy].name)}</b>`

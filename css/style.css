@@ -389,3 +389,20 @@ input:focus { border-color: var(--accent); }
 .bid-btns.three { grid-template-columns: 1fr 1fr 1.3fr; gap: 8px; }
 .bid-btns.three .btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 6px; font-size: 1rem; }
 .bid-btns.three .btn small { font-size: 0.72rem; font-weight: 700; opacity: 0.8; }
+
+/* 🖼️ 20€ Draft – Karte mit Bild links, Name rechts */
+.auction-item { flex-direction: row; align-items: center; gap: 12px; padding: 14px; text-align: left;
+  background: radial-gradient(circle at 25% 30%, #4d4b5e, #2a2836 70%); border: 1px solid rgba(255, 255, 255, 0.08); }
+.auction-item .ai-pic { flex: 0 0 52%; display: grid; place-items: center; }
+.auction-item .ai-text { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; }
+.auction-item .auction-name { font-size: 1.55rem; line-height: 1.15; overflow-wrap: anywhere; hyphens: auto; }
+.auction-item .cat { font-size: 0.8rem; }
+.auction-item .art.big { width: 100%; aspect-ratio: 1; max-height: none; }
+.pic { display: grid; place-items: center; width: 100%; }
+.pic img { width: 100%; height: 100%; object-fit: contain; display: block; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45)); }
+.pic.big { aspect-ratio: 1; }
+.auction-item .pic.big img { animation: floaty 3.5s ease-in-out infinite; }
+.pic.mini { flex: 1; min-height: 0; }
+.pic.mini img { filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.4)); }
+.sold-art .pic.big { width: 70%; margin: 0 auto; }
+.cell.filled .pic.mini { flex: 0 1 auto; height: 58%; }
