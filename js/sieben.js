@@ -18,7 +18,7 @@ const NUM_COLORS = ["#9aa0b5", "#8a7cff", "#5a8cff", "#2fb5e0", "#22c7a0", "#4cc
 const Sieben = {
   settings: Object.assign({ target: 200 }, store.get("siebenSettings", {})),
   players: [], deck: [], discard: [], dealer: 0, round: 1, token: 0,
-  focus: -1, last: null, msg: "", prompt: null, roundOver: false, three: null, rot: 0, rotAnim: 0,
+  focus: -1, last: null, msg: "", prompt: null, spot: null, spotCard: null, roundOver: false, three: null, rot: 0, rotAnim: 0,
 };
 
 // ---------- Karten ----------
@@ -39,7 +39,7 @@ function siebenDraw() {
 const cardHtml = (c, cls = "") => {
   if (!c) return "";
   if (c.t === "num") return `<div class="fcard num ${cls}" style="--c:${NUM_COLORS[c.v]}"><b>${c.v}</b></div>`;
-  if (c.t === "bonus") return `<div class="fcard bonus ${cls}"><b>${c.v === "x2" ? "×2" : "+" + c.v}</b></div>`;
+  if (c.t === "bonus") return `<div class="fcard bonus ${cls}"><b>${c.v === "x2" ? "×2" : "+" + c.v}</b><small>${c.v === "x2" ? "Doppelt" : "Bonus"}</small></div>`;
   if (c.t === "back") return `<div class="fcard back ${cls}"><span>🍀</span></div>`;
   const A = SIEBEN_ACTIONS[c.a];
   return `<div class="fcard act act-${c.a} ${cls}"><span>${A.emoji}</span><small>${A.name}</small></div>`;
@@ -70,7 +70,7 @@ async function siebenChooseTarget(fromIdx, verb, filter = active) {
   const opts = Sieben.players.map((p, i) => i).filter((i) => filter(Sieben.players[i]));
   if (!opts.length) return -1;
   if (opts.length === 1) return opts[0];
-  return siebenAsk({ type: "target", from: fromIdx, verb, opts });
+  return siebenAsk({ type: "target", from: fromIdx, verb, opts, card: Sieben.spotCard });
 }
 
 // Eine Karte an Person i geben. deferred: Liste für Aktionen während eines Dreierzugs.
@@ -85,8 +85,8 @@ async function siebenGive(i, deferred = null) {
   Sieben.last = c;
   if (c.t === "num") {
     if (nums(p).some((x) => x.v === c.v)) {
-      if (p.sc) {
-        const sc = p.sc; p.sc = null;
+      if (p.sc.length) {
+        const sc = p.sc.pop();
         Sieben.msg = `🛡️ Doppelte ${c.v} – aber das goldene Schild rettet ${esc(p.name)}!`;
         siebenFx(i, "shield-break"); siebenRender(); App.beep(1200, 0.12); App.vibrate([30, 30, 30]);
         await siebenFly(c, `#seat-${i} .seat-cards`, "#s7-disc", "bounce"); siebenGuard(tok);
@@ -109,33 +109,39 @@ async function siebenGive(i, deferred = null) {
     p.bonus.push(c); App.beep(880, 0.1);
   } else {
     Sieben.msg = `${SIEBEN_ACTIONS[c.a].emoji} ${esc(p.name)} zieht <b>${SIEBEN_ACTIONS[c.a].name}</b>!`;
-    siebenRender(); await siebenSleep(800); siebenGuard(tok);
+    siebenRender(); App.beep(c.a === "freeze" ? 1300 : c.a === "three" ? 380 : 990, 0.15);
     if (c.a === "second") {
-      if (!p.sc) { p.sc = c; Sieben.msg = `🛡️ ${esc(p.name)} bekommt ein goldenes Schild (Zweite Chance).`; siebenRender(); siebenFx(i, "shield-gain"); }
-      else {
-        const t = await siebenChooseTarget(i, "2. Schild weitergeben an", (q) => active(q) && !q.sc && q !== p);
-        siebenGuard(tok);
-        if (t >= 0) {
-          await siebenFly(c, `#seat-${i} .seat-cards`, `#seat-${t} .seat-cards`); siebenGuard(tok);
-          Sieben.players[t].sc = c; Sieben.msg = `🛡️ ${esc(p.name)} gibt das zweite Schild an ${esc(Sieben.players[t].name)}.`;
-          siebenRender(); siebenFx(t, "shield-gain");
-        } else { Sieben.discard.push(c); Sieben.msg = "🛡️ Das zweite Schild wird abgeworfen – niemand kann es nehmen."; }
-      }
+      await siebenSpotShow(c, i, p.sc.length ? `${esc(p.name)} bekommt ein weiteres Schild!` : `${esc(p.name)} bekommt ein goldenes Schild.`); siebenGuard(tok);
+      p.sc.push(c);
+      Sieben.msg = p.sc.length > 1 ? `🛡️ ${esc(p.name)} hat jetzt ${p.sc.length} Schilde – geschützt vor ${p.sc.length} doppelten Zahlen.` : `🛡️ ${esc(p.name)} bekommt ein goldenes Schild (Zweite Chance).`;
+      siebenRender(); siebenFx(i, "shield-gain");
     } else if (deferred) {
+      await siebenSpotShow(c, i, "kommt nach dem Dreierzug dran"); siebenGuard(tok);
       deferred.push({ c, from: i }); Sieben.msg = `${SIEBEN_ACTIONS[c.a].emoji} ${SIEBEN_ACTIONS[c.a].name} kommt erst nach dem Dreierzug dran.`;
     } else {
       await siebenAction(c, i); siebenGuard(tok);
     }
   }
-  siebenRender(); await siebenSleep(Sieben.three ? 450 : c.t === "num" ? 650 : 900); siebenGuard(tok);
+  siebenRender(); await siebenSleep(Sieben.three ? 450 : c.t === "num" ? 650 : 700); siebenGuard(tok);
+}
+
+// Aktionskarte groß in der Tischmitte zeigen (ohne Auswahl)
+async function siebenSpotShow(c, from, text, ms = 1300) {
+  const tok = Sieben.token;
+  Sieben.spot = { c, from, text }; siebenRender();
+  await siebenSleep(ms); siebenGuard(tok);
+  Sieben.spot = null; siebenRender();
 }
 
 async function siebenAction(c, from) {
   const tok = Sieben.token;
   Sieben.discard.push(c);
   const others = Sieben.players.some((q, k) => k !== from && active(q));
-  const verb = c.a === "freeze" ? "Wen einfrieren? ❄️" : "Wer muss 3 Karten ziehen? ⚡";
-  const t = others ? await siebenChooseTarget(from, verb) : from;
+  const verb = c.a === "freeze" ? "Wen einfrieren?" : "Wer muss 3 Karten ziehen?";
+  let t;
+  if (others) { Sieben.spotCard = c; t = await siebenChooseTarget(from, verb); Sieben.spotCard = null; }
+  else if (active(Sieben.players[from])) { await siebenSpotShow(c, from, `Nur ${esc(Sieben.players[from].name)} ist noch im Spiel – trifft dich selbst!`, 1700); t = from; }
+  else t = -1;
   siebenGuard(tok);
   if (t < 0) return;
   const tp = Sieben.players[t];
@@ -163,7 +169,7 @@ async function siebenAction(c, from) {
 async function siebenRound() {
   const tok = Sieben.token, n = Sieben.players.length;
   Sieben.roundOver = false; Sieben.three = null; Sieben.msg = `🎩 ${esc(Sieben.players[Sieben.dealer].name)} teilt aus …`;
-  Sieben.players.forEach((p) => Object.assign(p, { cards: [], bonus: [], sc: null, status: "active", flip7: false }));
+  Sieben.players.forEach((p) => Object.assign(p, { cards: [], bonus: [], sc: [], status: "active", flip7: false }));
   Sieben.last = null; siebenSetFocus((Sieben.dealer + 1) % n, true);
   siebenRender(); await siebenSleep(900); siebenGuard(tok);
   // Austeilen: jede:r eine Karte, beginnend links vom Geber, Geber zuletzt
@@ -218,7 +224,10 @@ function siebenPlaceSeats() {
   const rx = Math.max(22, Math.min(40, 50 - (82 / tw) * 100)), ry = Math.max(22, Math.min(37, 50 - (52 / th) * 100));
   Sieben.players.forEach((p, i) => {
     const el = document.getElementById(`seat-${i}`); if (!el) return;
-    const a = (Math.PI / 2) + ((i - Sieben.rot) / n) * Math.PI * 2;
+    // Abstand zur Person vorne (in Plätzen), nach oben gespreizt: bei 3–4 Personen sitzen die anderen oben statt seitlich
+    let d = (((i - Sieben.rot) % n) + n) % n; if (d > n / 2) d -= n;
+    const k = Math.abs(d) / (n / 2), w = n === 3 ? 0.55 : n === 4 ? 0.7 : n === 5 ? 0.85 : 1;
+    const a = (Math.PI / 2) + Math.sign(d) * Math.pow(k, w) * Math.PI;
     const x = 50 + rx * Math.cos(a), y = 50 + ry * Math.sin(a);
     const front = Math.max(0, Math.sin(a));
     el.style.left = x + "%"; el.style.top = y + "%";
@@ -289,7 +298,7 @@ function cardsBlock(p, big) {
   if (!row) row = `<span class="s7-empty">${p.status === "frozen" ? "❄️" : "–"}</span>`;
   return `<div class="cards-row ${p.status === "stopped" ? "stacked" : ""}">${row}</div>
     ${p.status === "frozen" ? `<div class="ice"><i></i></div>` : ""}
-    ${p.sc ? `<div class="shield-slot">${SHIELD_SVG}</div>` : ""}`;
+    ${p.sc.length ? `<div class="shield-slot">${SHIELD_SVG}${p.sc.length > 1 ? `<em>×${p.sc.length}</em>` : ""}</div>` : ""}`;
 }
 
 function siebenRender() {
@@ -300,19 +309,35 @@ function siebenRender() {
   $("#s7-deckn").textContent = S.deck.length;
   $("#s7-discn").textContent = S.discard.length;
   $("#s7-disc .disc-top").innerHTML = S.discard.length ? cardHtml(S.discard[S.discard.length - 1], "sm") : "";
+  // Aktion in der Tischmitte
+  const pr = S.prompt;
+  const pick = pr && pr.type === "target" ? pr : null;
+  const spot = pick ? { c: pick.card, from: pick.from, ask: pick.verb } : S.spot;
+  const spEl = $("#s7-spot");
+  if (spot && spot.c) {
+    const key = spot.c === spEl._c ? "" : " pop";
+    spEl._c = spot.c;
+    spEl.className = `s7-spot on act-${spot.c.a}${key}`;
+    spEl.innerHTML = `<div class="spot-card">${cardHtml(spot.c, "xl")}</div>
+      <div class="spot-text"><b>${App.avatar(P[spot.from].name)} ${esc(P[spot.from].name)}</b>
+      ${spot.ask ? `<span>${spot.ask}</span><em>👆 Tippe auf einen Platz</em>` : `<span>${spot.text || ""}</span>`}</div>`;
+  } else { spEl.className = "s7-spot"; spEl._c = null; spEl.innerHTML = ""; }
+  $(".s7-center").classList.toggle("dim", !!(spot && spot.c));
   // Plätze
   P.forEach((p, i) => {
     const el = document.getElementById(`seat-${i}`);
     const keep = [...el.classList].filter((c) => c.startsWith("fx-"));
-    el.className = `seat ${p.status} ${i === S.focus ? "focus" : ""} ${S.three && S.three.i === i ? "three" : ""} ${p.flip7 ? "flip7" : ""} ${keep.join(" ")}`;
+    const can = pick && pick.opts.includes(i);
+    el.className = `seat ${p.status} ${can ? "pick" : ""} ${pick && !can ? "nopick" : ""} ${i === S.focus ? "focus" : ""} ${S.three && S.three.i === i ? "three" : ""} ${p.flip7 ? "flip7" : ""} ${keep.join(" ")}`;
     el.querySelector(".seat-head").innerHTML = `${App.avatar(p.name)}<b>${esc(p.name)}</b>${i === S.dealer ? `<span class="dealer">🎩 gibt</span>` : ""}
       <span class="seat-pts">${p.status === "busted" ? "💥" : roundScore(p)}</span><span class="seat-tot">Σ ${p.total}</span>`;
     el.querySelector(".seat-cards").innerHTML = cardsBlock(p, false);
     el.querySelector(".seat-three").innerHTML = S.three && S.three.i === i ? `⚡ ${Math.min(3, S.three.n)}/3` : "";
+    el.onclick = can ? () => pick.resolve(i) : null;
+    el.querySelector(".seat-pick").textContent = can ? (i === pick.from ? "👆 du selbst" : "👆 antippen") : "";
   });
   // Hand der Person im Fokus
   const f = P[S.focus];
-  const pr = S.prompt;
   if (f) {
     const hand = $("#s7-hand");
     const keep = [...hand.classList].filter((c) => c.startsWith("fx-"));
@@ -330,7 +355,7 @@ function siebenRender() {
     actions = `<div class="s7-btns"><button class="btn btn-ghost big-choice" data-ch="stop">✋ Stopp<small>${roundScore(P[pr.who])} Punkte sichern</small></button>
       <button class="btn btn-primary big-choice" data-ch="more">🃏 Noch eine<small>${S.deck.length} im Stapel</small></button></div>`;
   } else if (pr && pr.type === "target") {
-    actions = `<p class="s7-ask"><b>${esc(P[pr.from].name)}</b>: ${pr.verb}</p>
+    actions = `<p class="s7-ask">👆 Platz am Tisch antippen – oder hier:</p>
       <div class="chips center">${pr.opts.map((i) => `<button class="chip" data-t="${i}">${App.avatar(P[i].name)} ${esc(P[i].name)}${i === pr.from ? " (du)" : ""}</button>`).join("")}</div>`;
   }
   $("#s7-act").innerHTML = actions;
@@ -358,7 +383,7 @@ App.screens.siebenSetup = () => {
           <p><b>Zahlenkarten 0–12:</b> Je höher die Zahl, desto öfter ist sie im Stapel (12× die 12 … 1× die 1, eine 0). Doppelte Zahl = verzockt = 0 Punkte – die Karten werden umgedreht.</p>
           <p><b>Bonuskarten:</b> +2, +4, +6, +8, +10 kommen dazu, ×2 verdoppelt deine Zahlen (nicht die Boni, nicht die +15).</p>
           <p><b>❄️ Einfrieren:</b> Wähle jemanden (auch dich): Die Karten frieren ein, die Person steigt aus und sichert ihre Punkte.<br>
-          <b>🛡️ Zweite Chance:</b> Ein goldenes Schild schützt dich einmal vor einer doppelten Zahl. Nur ein Schild pro Person – ein zweites musst du weitergeben.<br>
+          <b>🛡️ Zweite Chance:</b> Ein goldenes Schild schützt dich einmal vor einer doppelten Zahl. Du darfst auch mehrere Schilde sammeln – jedes schützt vor einer doppelten Zahl.<br>
           <b>⚡ Dreierzug:</b> Wähle jemanden (auch dich), der 3 Karten nacheinander ziehen muss. Aktionen, die dabei gezogen werden, kommen erst danach dran.</p>
           <p><b>Stapel:</b> Benutzte Karten kommen auf die Ablage und erst zurück, wenn der Stapel komplett leer ist – merkt euch, was schon da war! 🧠</p>
         </details>
@@ -367,7 +392,7 @@ App.screens.siebenSetup = () => {
     App.on("[data-target]", "click", (e, el) => { S.target = +el.dataset.target; store.set("siebenSettings", S); draw(); });
     $("#start").onclick = () => {
       App.unlockAudio();
-      Object.assign(Sieben, { players: App.players.map((name) => ({ name, total: 0, cards: [], bonus: [], sc: null, status: "active", flip7: false })),
+      Object.assign(Sieben, { players: App.players.map((name) => ({ name, total: 0, cards: [], bonus: [], sc: [], status: "active", flip7: false })),
         deck: siebenDeck(), discard: [], dealer: Math.floor(Math.random() * App.players.length), round: 1, rot: 0, focus: -1 });
       App.show("siebenPlay");
     };
@@ -376,7 +401,7 @@ App.screens.siebenSetup = () => {
 };
 
 App.screens.siebenPlay = () => {
-  Sieben.token++; Sieben.prompt = null; Sieben.three = null;
+  Sieben.token++; Sieben.prompt = null; Sieben.three = null; Sieben.spot = null; Sieben.spotCard = null;
   const tok = Sieben.token;
   App.onLeave(() => { if (Sieben.token === tok) Sieben.token++; Sieben.rotAnim++; document.body.classList.remove("s7-on"); });
   document.body.classList.add("s7-on");
@@ -393,7 +418,8 @@ App.screens.siebenPlay = () => {
           <div class="pile" id="s7-deck"><div class="fcard back"><span>🍀</span></div><div class="fcard back st"><span>🍀</span></div><em id="s7-deckn"></em></div>
           <div class="pile disc" id="s7-disc"><div class="disc-top"></div><em>🗑️ <span id="s7-discn"></span></em></div>
         </div>
-        ${Sieben.players.map((p, i) => `<div class="seat" id="seat-${i}"><div class="seat-three"></div><div class="seat-head"></div><div class="seat-cards"></div></div>`).join("")}
+        <div class="s7-spot" id="s7-spot"></div>
+        ${Sieben.players.map((p, i) => `<div class="seat" id="seat-${i}"><div class="seat-three"></div><div class="seat-pick"></div><div class="seat-head"></div><div class="seat-cards"></div></div>`).join("")}
       </div></div>
       <aside class="s7-panel">
         <div id="s7-hand" class="s7-hand"></div>
@@ -412,7 +438,7 @@ App.screens.siebenRoundEnd = () => {
   const S = Sieben;
   S.players.forEach((p) => { p.last = roundScore(p); p.lastStatus = p.status; p.lastFlip = p.flip7; p.total += p.last; });
   // Alle Karten der Runde auf die Ablage (sie werden erst gemischt, wenn der Stapel leer ist)
-  S.players.forEach((p) => { S.discard.push(...p.cards, ...p.bonus); if (p.sc) S.discard.push(p.sc); p.cards = []; p.bonus = []; p.sc = null; });
+  S.players.forEach((p) => { S.discard.push(...p.cards, ...p.bonus); S.discard.push(...p.sc); p.cards = []; p.bonus = []; p.sc = []; });
   const ranked = [...S.players].sort((a, b) => b.total - a.total);
   const done = ranked[0].total >= S.settings.target && (ranked.length < 2 || ranked[0].total > ranked[1].total);
   const tie = ranked[0].total >= S.settings.target && !done;

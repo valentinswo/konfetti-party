@@ -565,3 +565,65 @@ body.s7-on #app { max-width: none; }
   .seat-head { font-size: .72rem; }
 }
 .seat-cards { padding-right: 0; } .seat:has(.shield-slot) .seat-cards { margin-right: 26px; }
+
+/* 🍀 Sieben – Aktion in der Tischmitte, tippbare Plätze, größere Karten mit Namen */
+.s7-center { transition: opacity .3s, transform .3s; }
+.s7-center.dim { opacity: .15; transform: translate(-50%, -50%) scale(.8); }
+.s7-spot { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 6; display: none; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; text-align: center; width: 62%; }
+.s7-spot.on { display: flex; }
+.s7-spot.pop .spot-card { animation: spotin .55s cubic-bezier(.3,1.5,.5,1); }
+.s7-spot .spot-card { filter: drop-shadow(0 0 18px rgba(255,255,255,.35)); }
+.s7-spot.act-freeze .spot-card { filter: drop-shadow(0 0 22px rgba(140,210,255,.95)); }
+.s7-spot.act-second .spot-card { filter: drop-shadow(0 0 22px rgba(255,205,60,.95)); }
+.s7-spot.act-three .spot-card { filter: drop-shadow(0 0 22px rgba(197,140,255,.95)); }
+.s7-spot.act-three .spot-card .fcard { animation: zapcard .35s steps(2) infinite; }
+@keyframes zapcard { 50% { box-shadow: 0 0 0 3px #ffe36b, 0 0 30px rgba(255,227,107,1), inset 0 0 0 3px rgba(255,255,255,.7); } }
+.spot-text { background: rgba(10, 8, 30, .82); border-radius: 14px; padding: 6px 12px; display: flex; flex-direction: column; gap: 1px; font-size: .85rem; line-height: 1.25; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+.spot-text span { font-weight: 800; } .spot-text em { font-style: normal; color: var(--accent2); font-weight: 900; font-size: .8rem; }
+@keyframes spotin { 0% { transform: scale(.2) rotate(-25deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+.fcard.xl { width: 86px; height: 120px; border-radius: 14px; }
+.fcard.xl span { font-size: 2.6rem; } .fcard.xl small { font-size: .78rem; } .fcard.xl b { font-size: 2.4rem; }
+.fcard.bonus { grid-template-rows: 1fr auto; padding: 4px 2px; }
+.fcard.bonus small { font-size: .5rem; font-weight: 900; color: #7a3a00; line-height: 1; }
+.fcard.bonus.sm { grid-template-rows: 1fr; }
+.fcard.bonus.sm small { display: none; }
+/* tippbare Plätze */
+.seat.pick { cursor: pointer; border-color: #ffe36b; box-shadow: 0 0 0 3px rgba(255,227,107,.5), 0 0 26px rgba(255,227,107,.7); animation: pickpulse 1s ease-in-out infinite; }
+.seat.nopick { opacity: .45; }
+.seat-pick { display: none; } .seat.pick .seat-pick { display: block; position: absolute; bottom: -13px; left: 50%; transform: translateX(-50%); background: #ffe36b; color: #3a2600; font-weight: 900; font-size: .7rem; border-radius: 99px; padding: 1px 8px; white-space: nowrap; z-index: 2; }
+@keyframes pickpulse { 50% { box-shadow: 0 0 0 6px rgba(255,227,107,.25), 0 0 34px rgba(255,227,107,.9); } }
+/* mehrere Schilde */
+.shield-slot em { position: absolute; right: -6px; bottom: -4px; font-style: normal; font-weight: 900; font-size: .65rem; background: #c88400; color: #fff; border-radius: 99px; padding: 0 5px; }
+.s7-hand .shield-slot em { font-size: .85rem; }
+/* Tisch: Karten mittelgroß */
+.fcard.sm { width: 32px; height: 45px; } .fcard.sm b { font-size: 1.05rem; } .fcard.sm span { font-size: .9rem; } .fcard.bonus.sm b { font-size: .78rem; }
+/* eigene Hand: große Karten mit Namen, umbrechen statt abschneiden */
+.s7-hand .cards-row { flex-wrap: wrap; }
+.s7-hand .fcard:not(.sm) { width: 58px; height: 82px; border-radius: 12px; }
+.s7-hand .fcard:not(.sm) b { font-size: 2rem; }
+.s7-hand .fcard.act:not(.sm) span { font-size: 1.8rem; } .s7-hand .fcard:not(.sm) small { font-size: .62rem; }
+.s7-hand .fcard.bonus:not(.sm) b { font-size: 1.45rem; }
+.s7-hand .cards-row.stacked { flex-wrap: nowrap; }
+.s7-hand .cards-row.stacked .fcard + .fcard { margin-left: -34px; }
+.s7-hand .hand-cards { padding-right: 56px; }
+@media (orientation: landscape) and (max-height: 480px) {
+  .s7-hand .fcard:not(.sm) { width: 42px; height: 60px; } .s7-hand .fcard:not(.sm) b { font-size: 1.4rem; }
+  .s7-hand .fcard.act:not(.sm) span { font-size: 1.2rem; } .s7-hand .fcard:not(.sm) small { font-size: .5rem; }
+  .fcard.sm { width: 24px; height: 34px; } .fcard.sm b { font-size: .8rem; }
+  .fcard.xl { width: 60px; height: 84px; } .fcard.xl span { font-size: 1.8rem; } .fcard.xl small { font-size: .6rem; }
+  .spot-text { font-size: .72rem; padding: 4px 8px; }
+}
+@media (orientation: portrait) and (max-width: 420px) {
+  .s7-hand .fcard:not(.sm) { width: 50px; height: 72px; } .s7-hand .fcard:not(.sm) b { font-size: 1.75rem; }
+  .s7-spot { width: 70%; }
+}
+@media (orientation: portrait) {
+  .s7-table { aspect-ratio: auto; height: 100%; max-height: 100%; }
+  .felt { inset: 13% 6%; }
+  .fcard.xl { width: 66px; height: 92px; } .fcard.xl span { font-size: 2rem; } .fcard.xl small { font-size: .66rem; } .fcard.xl b { font-size: 1.9rem; }
+  .spot-text { font-size: .78rem; padding: 5px 10px; }
+}
+@media (orientation: landscape) and (max-height: 480px) {
+  .s7-spot { flex-direction: row; justify-content: center; width: max-content; max-width: 86%; top: 47%; gap: 8px; }
+  .spot-text { text-align: left; }
+}
