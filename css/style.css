@@ -386,3 +386,6 @@ input:focus { border-color: var(--accent); }
 .sc-spa     { background: linear-gradient(180deg, #e9fff4, #a8e6cf); }
 .sc-studio  { background: radial-gradient(circle at 50% 35%, #8f7bff, #3a2f8f 70%); }
 .sc-grey    { background: linear-gradient(180deg, #a3a3ad, #6c6c78); }
+.bid-btns.three { grid-template-columns: 1fr 1fr 1.3fr; gap: 8px; }
+.bid-btns.three .btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 6px; font-size: 1rem; }
+.bid-btns.three .btn small { font-size: 0.72rem; font-weight: 700; opacity: 0.8; }
