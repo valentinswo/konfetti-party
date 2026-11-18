@@ -142,7 +142,7 @@ App.screens.draftIntro = (i) => {
         <div>🔨 Reihum bieten, Mindestgebot <b>1 €</b></div>
         <div>🎲 Die Dinge kommen in zufälliger Reihenfolge</div>
         <div>🙅 Wer passt, ist für dieses Ding raus – Pässe sind begrenzt, ohne Pässe muss man bieten</div>
-        <div>⏭️ Solange noch niemand geboten hat, kann man ein Ding wegskippen – dann bekommt es niemand</div>
+        <div>⏭️ Wer dran ist, kann ein Ding jederzeit wegskippen – dann bekommt es niemand (auch wenn schon geboten wurde) 😈</div>
         <div>🤷 Passen alle, ohne dass jemand bietet, fliegt das Ding auch raus</div>
         <div>🔒 Pro freiem Feld bleibt 1 € reserviert → max. <b>18 €</b> fürs erste Ding</div>
         <div>⚡ Hat nur noch eine Person freie Felder, bekommt sie die nächsten Dinge direkt für 1 €</div>
@@ -151,7 +151,7 @@ App.screens.draftIntro = (i) => {
       <div class="chips center">${[3, 5, 8, UNLIMITED].map((k) => `<button class="chip ${k === S.passes ? "on" : ""}" data-pa="${k}">${k >= UNLIMITED ? "♾️ Unbegrenzt" : `${k}×`}</button>`).join("")}</div>
       <h3 class="section">⏭️ Skippen pro Person</h3>
       <div class="chips center">${[0, 1, 2, 3].map((k) => `<button class="chip ${k === S.skips ? "on" : ""}" data-sk="${k}">${k === 0 ? "🚫 Nie" : `${k}×`}</button>`).join("")}</div>
-      <p class="muted small">Skippen = das Ding wegwerfen, bevor jemand bietet – niemand bekommt's 😈</p>
+      <p class="muted small">Skippen = das Ding wegwerfen, auch mitten im Bieten – niemand bekommt's 😈</p>
       <p class="muted">Startreihenfolge: ${Draft.players.map((p) => esc(p.name)).join(" → ")}</p>
       <button class="btn btn-primary wide" id="go">Auktion starten 🔨</button>
     </main>`, { anim: false });
@@ -218,8 +218,8 @@ App.screens.draftAuction = ({ anim = true } = {}) => {
   const me = Draft.players[A.turn];
   const lo = minBid(), hi = maxBid(me);
   A.value = Math.min(Math.max(A.value, lo), hi);
-  const opening = A.high === 0; // Skippen geht nur, solange noch niemand geboten hat
-  const canSkip = opening && me.skips > 0 && !scarce();
+  // Jede:r kann bei jedem Zug bieten, passen oder skippen (Skip = Ding fliegt raus, auch wenn schon geboten wurde)
+  const canSkip = me.skips > 0 && !scarce();
 
   App.render(`
     ${topbar(`${pack.emoji} ${esc(pack.title)}`, "draftSetup")}
@@ -244,12 +244,12 @@ App.screens.draftAuction = ({ anim = true } = {}) => {
         <div class="step-val"><span id="val">${A.value}</span> €</div>
         <button class="step" id="plus" ${A.value >= hi ? "disabled" : ""}>＋</button>
       </div>
-      <div class="bid-btns">
-        <button class="btn btn-ghost" id="pass" ${me.passes > 0 ? "" : "disabled"}>🙅 Passen <small>(${passLabel(me.passes)}×)</small></button>
-        <button class="btn btn-primary" id="bid">🔨 Bieten</button>
+      <div class="bid-btns three">
+        <button class="btn btn-ghost" id="pass" ${me.passes > 0 ? "" : "disabled"}>🙅 Passen<small>${passLabel(me.passes)}× übrig</small></button>
+        <button class="btn btn-ghost" id="skip" ${canSkip ? "" : "disabled"}>⏭️ Skippen<small>${scarce() ? "gesperrt" : `${me.skips}× übrig`}</small></button>
+        <button class="btn btn-primary" id="bid">🔨 Bieten<small>${A.value} €</small></button>
       </div>
-      ${canSkip ? `<button class="btn btn-ghost btn-small wide" id="skip">⏭️ Wegskippen – niemand bekommt's <small>(${me.skips}× übrig)</small></button>` : ""}
-      ${me.passes <= 0 ? `<p class="muted small">Keine Pässe mehr übrig – du musst bieten! 💸</p>` : ""}
+      ${me.passes <= 0 && !canSkip ? `<p class="muted small">Keine Pässe und Skips mehr übrig – du musst bieten! 💸</p>` : ""}
 
       ${draftBoard()}
     </main>`, { anim });
@@ -257,6 +257,7 @@ App.screens.draftAuction = ({ anim = true } = {}) => {
   const setVal = (v) => {
     A.value = Math.min(Math.max(v, lo), hi);
     $("#val").textContent = A.value;
+    $("#bid small").textContent = `${A.value} €`;
     $("#minus").disabled = A.value <= lo;
     $("#plus").disabled = A.value >= hi;
     App.vibrate(10);
