@@ -65,6 +65,13 @@ for (const [name, val] of Object.entries(DRAFT_ART)) {
   if (bg && !sceneNames.has(bg)) errors.push(`Bilder: Hintergrund "${bg}" (bei "${name}") gibt es nicht im CSS`);
 }
 const withArt = [...itemNames].filter((n) => DRAFT_ART[n]).length;
+// 🖼️ Echte Bilder prüfen
+const fsx = require("fs");
+const DRAFT_IMAGES = require(path.join(__dirname, "../js/data/draft-images.js"));
+for (const [name, file] of Object.entries(DRAFT_IMAGES)) {
+  if (!itemNames.has(name)) errors.push(`Bilder: "${name}" gibt es in keinem Paket (Tippfehler?)`);
+  if (!fsx.existsSync(path.join(__dirname, "..", file))) errors.push(`Bilder: Datei fehlt: ${file}`);
+}
 
 const bombSeen = new Set();
 for (const c of bombCats) {
@@ -79,4 +86,4 @@ if (errors.length) {
   process.exit(1);
 }
 const words = cats.reduce((n, c) => n + c.words.length, 0);
-console.log(`✅ Alles gut: ${packs.length} Draft-Pakete, ${cats.length} Scharade-Kategorien (${words} Begriffe), ${Object.keys(cards).length} Kartenspiele, ${bombCats.length} Bomben-Kategorien, ${withArt}/${itemNames.size} Draft-Dinge mit eigenem Bild.`);
+console.log(`✅ Alles gut: ${packs.length} Draft-Pakete, ${cats.length} Scharade-Kategorien (${words} Begriffe), ${Object.keys(cards).length} Kartenspiele, ${bombCats.length} Bomben-Kategorien, ${withArt}/${itemNames.size} Draft-Dinge mit Emoji-Szene, ${Object.keys(DRAFT_IMAGES).length} mit echtem Bild.`);
