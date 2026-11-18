@@ -1,0 +1,28 @@
+# Konfetti – Kontext für Claude
+
+Private Partyspiel-Web-App (Deutsch, mobil zuerst). Reines HTML/CSS/JS ohne Build-Schritt und ohne Framework. Gehostet auf Netlify, Updates nur über Pull Requests (Netlify erstellt für jeden PR eine Deploy-Preview).
+
+## Spiele & Regeln (so vom Owner gewünscht)
+
+- **💶 20€ Draft (Auktion)**: Jede:r hat 20 € und genau 3 Felder. Die Dinge eines Pakets werden einzeln versteigert, in **zufälliger Reihenfolge**. Zuletzt gesehene Dinge kommen nach hinten, und dieselbe Kategorie kommt nie zweimal direkt hintereinander. Es wird reihum geboten, und der Startspieler wechselt mit jedem Ding. Bedienung: Stepper mit ＋/−, dann „Bieten“ oder „Passen“. Mindestgebot 1 €. Man darf auch beim Eröffnen passen. Passen alle ohne Gebot, fliegt das Ding raus. Solange noch niemand geboten hat, kann man ein Ding außerdem **wegskippen**. **Pässe und Skips sind pro Person begrenzt** und werden vor dem Start eingestellt: Pässe 3/5/8/unbegrenzt (Standard 5), Skips 0–3 (Standard 2). Ohne Pässe muss man mitbieten. Skippen (das Ding wegwerfen, sodass es niemand bekommt) ist bewusst als Ärger-Option gewollt. Pro freiem weiterem Feld bleibt 1 € reserviert, das Höchstgebot am Anfang ist also 18 €. **Pflichtkauf:** Hat nur noch eine Person freie Felder, bekommt sie die nächsten Dinge direkt für 1 €. Die Anzahl der Dinge wird nie angezeigt. Jedes Paket hat eine **große Auswahl** und **mindestens ein paar Nieten** (Richtpreis 0). Jedes Ding hat eine **Bild-Szene** (Hintergrund + Haupt-Emoji + Deko) in `js/data/draft-art.js`. Neue Dinge bekommen immer auch ein passendes Bild. Spielfeld: eine Zeile pro Person mit 3 Feldern (2 Leute = 2×3, 3 Leute = 3×3). Am Ende stimmt die Gruppe über das beste Team ab. Maximal 6 Spieler:innen. Werden die Dinge knapp, ist Überspringen gesperrt.
+- **🎭 Scharade**: Wie Heads-Up. Die ratende Person hält das Handy an die Stirn. Nach vorne kippen = erraten, nach hinten kippen = überspringen (über `deviceorientation`, Display-Normale `cos(beta)·cos(gamma)`). Zwischen zwei Aktionen muss das Handy wieder gerade gehalten werden. Tippen bleibt als Alternative. Modi: Pantomime, Erklären, Zeichnen, Geräusche, Gemischt. Spielt in 2–4 Teams mit Timer.
+- **💣 Tickende Bombe**: Eine Kategorie (optional mit Anfangsbuchstabe) wird gezogen. Reihum sagt jede:r etwas Passendes, tippt auf „Weitergeben“ und reicht das Handy weiter. Die Zeit ist geheim, und das Ticken wird schneller. Wer das Handy beim Knall hält, verliert ein Leben (1–3). Die Person ist danach korrigierbar. Die letzte Person mit Leben gewinnt.
+- **🧑‍🎤 Avatare**: Jede:r Spieler:in hat ein Emoji-Avatar auf einem farbigen Kreis (`App.avatar(name)`). Antippen in der Spielerliste ändert es.
+- **🤔 Wer würde eher?**, **🙈 Ich hab noch nie**, **🔥 Wahrheit oder Pflicht**: Stufen 😇 mild und 🌶️ spicy (spicy bleibt jugendfrei-frech, nicht explizit).
+
+## Design
+
+Dunkler Hintergrund, bunte Verlaufs-Kacheln, große abgerundete Buttons, überall Emojis. Die App ist an Splash angelehnt, übernimmt aber **keine** Texte, Logos oder Assets von Splash. Alle Inhalte sind selbst geschrieben.
+
+## Aufbau
+
+- `js/app.js`: Navigation (`App.show(screen, ...args)`, `App.render`), Spielerliste, Startseite (`GAMES`)
+- `js/draft.js`, `js/charades.js`, `js/cards.js`, `js/bomb.js`: je ein Spiel
+- `js/data/*.js`: alle Inhalte als einfache Listen
+- `tools/check-data.js`: Inhalts-Check. Läuft in der GitHub Action „Inhalte prüfen“ und als Netlify-Build-Befehl.
+
+## Arbeitsweise
+
+- Für jede Änderung einen neuen Branch anlegen und einen PR auf `main` öffnen. Nicht direkt auf `main` pushen.
+- Vor dem PR `node tools/check-data.js` und `node --check` für die JS-Dateien ausführen. Wenn möglich, im Handy-Viewport (390×844) im Browser durchklicken.
+- Neues Spiel: Screen-Funktionen `App.screens.xyz` anlegen, die Kachel in `GAMES` eintragen und das Script in `index.html` einbinden.
