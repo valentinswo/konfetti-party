@@ -8,6 +8,7 @@ Eine kleine Web-App für Partyabende, ganz ohne Installation, ohne Anmeldung und
 |---|---|---|
 | 💶 | **20€ Draft** | Auktion: Jede:r hat 20 € und 3 Felder. Die Dinge kommen in zufälliger Reihenfolge und werden reihum versteigert. Reihum wird geboten oder gepasst (begrenzt), solange noch niemand geboten hat, kann man ein Ding auch wegskippen (begrenzt). Jedes Ding hat eine eigene Bild-Szene. Hat nur noch eine Person freie Felder, bekommt sie die nächsten Dinge direkt (Pflichtkauf). In jedem Paket stecken auch ein paar Nieten. Zum Schluss wird abgestimmt, wer das beste Team hat. 13 Pakete mit 32–84 Dingen (u. a. das perfekte Leben, der perfekte Garten, das perfekte Stadion, der perfekte Fußballspieler) |
 | 🎭 | **Scharade** | Wie Heads-Up: Handy an die Stirn, nach vorne kippen heißt erraten, nach hinten kippen heißt überspringen (Tippen geht auch). Modi: Pantomime, Erklären, Zeichnen, Geräusche oder gemischt. 18 Kategorien mit ca. 500 Begriffen |
+| 🍀 | **Sieben auf einen Streich** | Zock-Kartenspiel: Zahlen sammeln, bloß keine doppelt! 7 verschiedene = +15. Mit Bonus- und Aktionskarten (Einfrieren, Zweite Chance, Dreierzug), gespielt bis 200 Punkte |
 | 💣 | **Tickende Bombe** | Reihum etwas zur Kategorie sagen und das Handy weitergeben, bis es knallt. Die Zeit ist geheim, das Ticken wird immer schneller. Mit Leben und optionalem Anfangsbuchstaben. 80 Kategorien |
 | 🤔 | **Wer würde eher?** | Frage vorlesen, auf 3 zeigen alle gleichzeitig auf eine Person |
 | 🙈 | **Ich hab noch nie** | Wer's schon gemacht hat, muss es zugeben |
@@ -46,6 +47,7 @@ js/draft.js           20€ Draft
 js/charades.js        Scharade
 js/cards.js           Wer würde eher? / Ich hab noch nie / Wahrheit oder Pflicht
 js/bomb.js            Tickende Bombe
+js/sieben.js          Sieben auf einen Streich
 js/data/*.js          Alle Inhalte
 tools/check-data.js   Inhalts-Check (läuft auch in GitHub Actions & Netlify)
 ```
