@@ -627,3 +627,66 @@ body.s7-on #app { max-width: none; }
   .s7-spot { flex-direction: row; justify-content: center; width: max-content; max-width: 86%; top: 47%; gap: 8px; }
   .spot-text { text-align: left; }
 }
+
+/* 🍀 Sieben – alles auf dem Tisch: Hand & Knöpfe in der Mitte (überschreibt das alte Seitenpanel) */
+.s7, .s7 { grid-template-columns: 1fr !important; grid-template-rows: auto minmax(0, 1fr) !important; }
+.s7-tablewrap { display: block; }
+.s7-table { width: 100% !important; height: 100% !important; max-height: none; aspect-ratio: auto !important; }
+.felt { inset: 3% 2% 2% !important; }
+.felt::after { display: none; }
+.seat.focus { opacity: 0; pointer-events: none; }
+.seat { transition: border-color .3s, background .3s, opacity .35s; }
+/* Mitte: Hand + Meldung + Knöpfe */
+.s7-mid { position: absolute; left: 50%; transform: translateX(-50%); z-index: 8; display: flex; flex-direction: column; gap: 6px;
+  width: min(88%, 440px); bottom: 4%; }
+.s7-mid .s7-hand { background: rgba(10, 30, 25, .55); backdrop-filter: blur(2px); border-color: rgba(255,255,255,.18); padding: 10px; gap: 6px; }
+.s7-mid .s7-hand.busted { background: rgba(70, 15, 30, .7); }
+.s7-mid .s7-hand.frozen { background: rgba(25, 60, 110, .7); }
+.s7-mid .s-msg { background: rgba(10, 8, 30, .7); font-size: .85rem; padding: 6px 10px; }
+.s7-mid .s-msg:empty { display: none; }
+.s7-mid .big-choice { padding: 12px 8px; font-size: 1.1rem; }
+.s7-mid .s-name { font-size: 1.1rem; }
+.s7-mid .s-pts { padding: 4px 10px; } .s7-mid .s-pts b { font-size: 1.4rem; }
+/* Stapel & Ablage */
+.s7-piles { top: 44%; gap: 16px; }
+.s7-piles .fcard { width: 40px; height: 56px; } .pile.disc { width: 40px; height: 56px; }
+/* Aktion: ersetzt in der Mitte die Hand */
+.s7-mid .s7-spot { position: static; transform: none; width: auto; z-index: 1; }
+.s7.spot-on .s7-mid .s7-hand { display: none; }
+.self-pick { background: #ffe36b !important; color: #3a2600; font-size: 1rem; padding: 10px 18px; }
+/* Hochformat: andere oben im Bogen, Mitte unten */
+@media (orientation: portrait) {
+  .s7-piles { top: 41%; }
+  .felt { inset: 2% 1% 1% !important; }
+}
+/* Querformat: Stapel links neben der Mitte */
+@media (orientation: landscape) {
+  .s7-mid { width: min(56%, 460px); bottom: 3%; }
+  .s7-piles { top: auto; bottom: 10%; left: 11%; transform: none; flex-direction: column; gap: 26px; }
+}
+@media (orientation: landscape) and (max-height: 480px) {
+  .s7-mid { width: min(58%, 440px); gap: 4px; bottom: 2%; }
+  .s7-mid .s7-hand { padding: 6px 8px; gap: 4px; }
+  .s7-mid .s-head .ava.big { font-size: .9rem; } .s7-mid .s-name { font-size: .95rem; } .s7-mid .s-pts b { font-size: 1.1rem; } .s7-mid .s-pts { padding: 2px 8px; }
+  .s7-mid .s-head .muted { font-size: .7rem; }
+  .s7-mid .big-choice { padding: 6px 6px; font-size: .95rem; } .s7-mid .big-choice small { font-size: .65rem; }
+  .s7-mid .s-msg { font-size: .75rem; padding: 3px 8px; }
+  .s7-mid .s-count i { height: 6px; }
+  .s7-piles { left: 5%; bottom: 8%; gap: 22px; } .s7-piles .fcard, .pile.disc { width: 32px; height: 45px; }
+}
+/* Mitte als ein Block: Stapel oben, dann Hand, Meldung, Knöpfe – senkrecht zentriert unter den anderen */
+.s7-mid { top: 34%; bottom: 3%; justify-content: center; }
+.s7-mid .s7-piles { position: static; transform: none; justify-content: center; margin-bottom: 18px; flex: none; }
+.s7-mid .s7-piles.dim { transform: scale(.85); opacity: .3; }
+@media (orientation: portrait) { .felt { border-radius: 42% / 26%; } }
+@media (orientation: landscape) {
+  .s7-mid { top: 30%; bottom: 3%; width: min(70%, 600px); display: grid; grid-template-columns: auto 1fr; grid-template-rows: 1fr auto auto 1fr; column-gap: 14px; row-gap: 5px; }
+  .s7-mid .s7-piles { grid-column: 1; grid-row: 1 / -1; align-self: center; flex-direction: column; gap: 24px; margin: 0 0 16px; left: auto; bottom: auto; }
+  .s7-mid > :not(.s7-piles) { grid-column: 2; }
+  .s7-mid .s7-spot, .s7-mid .s7-hand { grid-row: 2; } .s7-mid .s-msg { grid-row: 3; } .s7-mid #s7-act { grid-row: 4; align-self: start; }
+}
+@media (orientation: landscape) and (max-height: 480px) {
+  .s7-mid { top: 27%; width: min(72%, 560px); }
+  .s7-mid .s7-piles { gap: 20px; }
+}
+@media (orientation: landscape) and (min-height: 700px) { .s7-mid { top: 24%; bottom: 8%; } }

@@ -62,6 +62,7 @@ function roundScore(p) {
 
 // ---------- Ablaufsteuerung (async, abbrechbar) ----------
 const SIEBEN_ABORT = {};
+const seatSel = (i) => (i === Sieben.focus ? "#s7-hand .hand-cards" : `#seat-${i} .seat-cards`);
 function siebenGuard(tok) { if (tok !== Sieben.token) throw SIEBEN_ABORT; }
 function siebenSleep(ms) { const tok = Sieben.token; return new Promise((res) => setTimeout(() => { if (tok === Sieben.token) res(); }, ms)); }
 function siebenAsk(prompt) { const tok = Sieben.token; return new Promise((res) => { Sieben.prompt = { ...prompt, resolve: (v) => { if (tok === Sieben.token) { Sieben.prompt = null; siebenRender(); res(v); } } }; siebenRender(); }); }
@@ -81,7 +82,7 @@ async function siebenGive(i, deferred = null) {
   siebenSetFocus(i); Sieben.last = null; Sieben.msg = "";
   if (Sieben.three && Sieben.three.i === i) Sieben.three.n++;
   siebenRender();
-  await siebenFly(c, "#s7-deck", `#seat-${i} .seat-cards`); siebenGuard(tok);
+  await siebenFly(c, "#s7-deck", seatSel(i)); siebenGuard(tok);
   Sieben.last = c;
   if (c.t === "num") {
     if (nums(p).some((x) => x.v === c.v)) {
@@ -89,7 +90,7 @@ async function siebenGive(i, deferred = null) {
         const sc = p.sc.pop();
         Sieben.msg = `🛡️ Doppelte ${c.v} – aber das goldene Schild rettet ${esc(p.name)}!`;
         siebenFx(i, "shield-break"); siebenRender(); App.beep(1200, 0.12); App.vibrate([30, 30, 30]);
-        await siebenFly(c, `#seat-${i} .seat-cards`, "#s7-disc", "bounce"); siebenGuard(tok);
+        await siebenFly(c, seatSel(i), "#s7-disc", "bounce"); siebenGuard(tok);
         Sieben.discard.push(c, sc);
       } else {
         p.cards.push(c); p.status = "busted";
@@ -221,17 +222,19 @@ function siebenPlaceSeats() {
   const n = Sieben.players.length, tbl = document.querySelector(".s7-table");
   // Radius so wählen, dass die Plätze nie über den Rand ragen (wichtig auf schmalen Handys)
   const tw = tbl ? tbl.clientWidth : 800, th = tbl ? tbl.clientHeight : 550;
-  const rx = Math.max(22, Math.min(40, 50 - (82 / tw) * 100)), ry = Math.max(22, Math.min(37, 50 - (52 / th) * 100));
+  const rx = Math.max(25, Math.min(42, 50 - (74 / tw) * 100)), ry = Math.max(25, Math.min(43, 50 - (50 / th) * 100));
   Sieben.players.forEach((p, i) => {
     const el = document.getElementById(`seat-${i}`); if (!el) return;
     // Abstand zur Person vorne (in Plätzen), nach oben gespreizt: bei 3–4 Personen sitzen die anderen oben statt seitlich
     let d = (((i - Sieben.rot) % n) + n) % n; if (d > n / 2) d -= n;
-    const k = Math.abs(d) / (n / 2), w = n === 3 ? 0.55 : n === 4 ? 0.7 : n === 5 ? 0.85 : 1;
-    const a = (Math.PI / 2) + Math.sign(d) * Math.pow(k, w) * Math.PI;
+    // Person im Fokus unten (Hand in der Mitte), alle anderen verteilt im oberen Bogen
+    const h = n / 2, tall = th > tw, A = Math.PI * (tall ? 0.5 + 0.35 / h : 0.6 + 0.4 / h), ad = Math.abs(d);
+    const off = ad <= 1 ? ad * A : A + (Math.PI - A) * ((ad - 1) / Math.max(0.0001, h - 1));
+    const a = (Math.PI / 2) + Math.sign(d) * off;
     const x = 50 + rx * Math.cos(a), y = 50 + ry * Math.sin(a);
     const front = Math.max(0, Math.sin(a));
     el.style.left = x + "%"; el.style.top = y + "%";
-    el.style.transform = `translate(-50%, -50%) scale(${0.82 + 0.3 * front})`;
+    el.style.transform = "translate(-50%, -50%)"; void front;
     el.style.zIndex = Math.round(10 + y);
   });
 }
@@ -269,9 +272,10 @@ function siebenParticles(el, chars, count = 14, spread = 90) {
 function siebenFx(i, type) {
   const seat = document.getElementById(`seat-${i}`), hand = document.getElementById("s7-hand");
   const targets = [seat, Sieben.focus === i ? hand : null].filter(Boolean);
+  const origin = Sieben.focus === i && hand ? hand.querySelector(".hand-cards") || hand : seat;
   const pulse = (cls, ms) => targets.forEach((el) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); });
-  if (type === "freeze") { pulse("fx-freeze", 1400); siebenParticles(seat, ["❄️", "❄", "✦"], 18, 110); }
-  if (type === "shield-gain") { pulse("fx-shield-gain", 900); siebenParticles(seat, ["✨", "⭐"], 10, 70); }
+  if (type === "freeze") { pulse("fx-freeze", 1400); siebenParticles(origin, ["❄️", "❄", "✦"], 18, 110); }
+  if (type === "shield-gain") { pulse("fx-shield-gain", 900); siebenParticles(origin, ["✨", "⭐"], 10, 70); }
   if (type === "shield-break") {
     targets.forEach((el) => {
       const sh = el.querySelector(".shield-slot"); if (!sh) return;
@@ -280,11 +284,11 @@ function siebenFx(i, type) {
       box.innerHTML = `<div class="half l">${SHIELD_SVG}</div><div class="half r">${SHIELD_SVG}</div>`;
       document.body.appendChild(box); setTimeout(() => box.remove(), 1000);
     });
-    siebenParticles(seat, ["✨", "💛"], 12, 80);
+    siebenParticles(origin, ["✨", "💛"], 12, 80);
   }
   if (type === "three") pulse("fx-three", 1100);
-  if (type === "bust") { pulse("fx-bust", 700); siebenParticles(seat, ["💥", "💢"], 8, 70); }
-  if (type === "flip7") { pulse("fx-flip7", 2000); siebenParticles(seat, ["🍀", "✨", "⭐"], 22, 140); }
+  if (type === "bust") { pulse("fx-bust", 700); siebenParticles(origin, ["💥", "💢"], 8, 70); }
+  if (type === "flip7") { pulse("fx-flip7", 2000); siebenParticles(origin, ["🍀", "✨", "⭐"], 22, 140); }
 }
 
 // ---------- Darstellung ----------
@@ -320,18 +324,19 @@ function siebenRender() {
     spEl.className = `s7-spot on act-${spot.c.a}${key}`;
     spEl.innerHTML = `<div class="spot-card">${cardHtml(spot.c, "xl")}</div>
       <div class="spot-text"><b>${App.avatar(P[spot.from].name)} ${esc(P[spot.from].name)}</b>
-      ${spot.ask ? `<span>${spot.ask}</span><em>👆 Tippe auf einen Platz</em>` : `<span>${spot.text || ""}</span>`}</div>`;
+      ${spot.ask ? `<span>${spot.ask}</span><em>👆 Tippe auf einen leuchtenden Platz</em>` : `<span>${spot.text || ""}</span>`}</div>`;
   } else { spEl.className = "s7-spot"; spEl._c = null; spEl.innerHTML = ""; }
-  $(".s7-center").classList.toggle("dim", !!(spot && spot.c));
+  $(".s7-piles").classList.toggle("dim", !!(spot && spot.c));
+  $("#s7").classList.toggle("spot-on", !!(spot && spot.c));
   // Plätze
   P.forEach((p, i) => {
     const el = document.getElementById(`seat-${i}`);
     const keep = [...el.classList].filter((c) => c.startsWith("fx-"));
-    const can = pick && pick.opts.includes(i);
+    const can = pick && pick.opts.includes(i) && i !== S.focus;
     el.className = `seat ${p.status} ${can ? "pick" : ""} ${pick && !can ? "nopick" : ""} ${i === S.focus ? "focus" : ""} ${S.three && S.three.i === i ? "three" : ""} ${p.flip7 ? "flip7" : ""} ${keep.join(" ")}`;
     el.querySelector(".seat-head").innerHTML = `${App.avatar(p.name)}<b>${esc(p.name)}</b>${i === S.dealer ? `<span class="dealer">🎩 gibt</span>` : ""}
       <span class="seat-pts">${p.status === "busted" ? "💥" : roundScore(p)}</span><span class="seat-tot">Σ ${p.total}</span>`;
-    el.querySelector(".seat-cards").innerHTML = cardsBlock(p, false);
+    el.querySelector(".seat-cards").innerHTML = i === S.focus ? "" : cardsBlock(p, false);
     el.querySelector(".seat-three").innerHTML = S.three && S.three.i === i ? `⚡ ${Math.min(3, S.three.n)}/3` : "";
     el.onclick = can ? () => pick.resolve(i) : null;
     el.querySelector(".seat-pick").textContent = can ? (i === pick.from ? "👆 du selbst" : "👆 antippen") : "";
@@ -355,8 +360,7 @@ function siebenRender() {
     actions = `<div class="s7-btns"><button class="btn btn-ghost big-choice" data-ch="stop">✋ Stopp<small>${roundScore(P[pr.who])} Punkte sichern</small></button>
       <button class="btn btn-primary big-choice" data-ch="more">🃏 Noch eine<small>${S.deck.length} im Stapel</small></button></div>`;
   } else if (pr && pr.type === "target") {
-    actions = `<p class="s7-ask">👆 Platz am Tisch antippen – oder hier:</p>
-      <div class="chips center">${pr.opts.map((i) => `<button class="chip" data-t="${i}">${App.avatar(P[i].name)} ${esc(P[i].name)}${i === pr.from ? " (du)" : ""}</button>`).join("")}</div>`;
+    actions = pr.opts.includes(pr.from) ? `<div class="chips center"><button class="chip self-pick" data-t="${pr.from}">🙋 Mich selbst (${esc(P[pr.from].name)})</button></div>` : "";
   }
   $("#s7-act").innerHTML = actions;
   App.on("[data-ch]", "click", (e, el) => pr.resolve(el.dataset.ch));
@@ -414,18 +418,18 @@ App.screens.siebenPlay = () => {
       </div>
       <div class="s7-tablewrap"><div class="s7-table">
         <div class="felt"></div>
-        <div class="s7-center">
-          <div class="pile" id="s7-deck"><div class="fcard back"><span>🍀</span></div><div class="fcard back st"><span>🍀</span></div><em id="s7-deckn"></em></div>
-          <div class="pile disc" id="s7-disc"><div class="disc-top"></div><em>🗑️ <span id="s7-discn"></span></em></div>
-        </div>
-        <div class="s7-spot" id="s7-spot"></div>
         ${Sieben.players.map((p, i) => `<div class="seat" id="seat-${i}"><div class="seat-three"></div><div class="seat-pick"></div><div class="seat-head"></div><div class="seat-cards"></div></div>`).join("")}
+        <div class="s7-mid">
+          <div class="s7-center s7-piles">
+            <div class="pile" id="s7-deck"><div class="fcard back"><span>🍀</span></div><div class="fcard back st"><span>🍀</span></div><em id="s7-deckn"></em></div>
+            <div class="pile disc" id="s7-disc"><div class="disc-top"></div><em>🗑️ <span id="s7-discn"></span></em></div>
+          </div>
+          <div class="s7-spot" id="s7-spot"></div>
+          <div id="s7-hand" class="s7-hand"></div>
+          <div id="s7-msg" class="s-msg"></div>
+          <div id="s7-act"></div>
+        </div>
       </div></div>
-      <aside class="s7-panel">
-        <div id="s7-hand" class="s7-hand"></div>
-        <div id="s7-msg" class="s-msg"></div>
-        <div id="s7-act"></div>
-      </aside>
     </div>`);
   Sieben.rot = (Sieben.dealer + 1) % Sieben.players.length; Sieben.focus = -1;
   siebenRender();

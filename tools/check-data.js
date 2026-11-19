@@ -23,8 +23,8 @@ for (const p of packs) {
       if (o.length !== 3 || typeof o[2] !== "number" || o[2] < 0) errors.push(`${where} / ${s.name}: Option ${JSON.stringify(o)} muss [Emoji, Name, Preis] sein`);
     }
   }
-  const nieten = (p.slots || []).flatMap((s) => s.options || []).filter((o) => o[2] === 0).length;
-  if (nieten < 3) errors.push(`${where}: braucht mindestens 3 Nieten (Richtpreis 0) – hat ${nieten}`);
+  // Keine Nieten: alles soll mittel bis gut sein (Richtpreis mindestens 2)
+  for (const o of (p.slots || []).flatMap((s) => s.options || [])) if (o[2] < 2) errors.push(`${where}: "${o[1]}" ist eine Niete (Richtpreis ${o[2]}) – bitte nur mittlere bis gute Dinge`);
   const total = (p.slots || []).reduce((n, s) => n + (s.options || []).length, 0);
   if (total < 18) errors.push(`${where}: nur ${total} Dinge – für 6 Spieler:innen × 3 Felder braucht es mindestens 18`);
 }
@@ -37,6 +37,7 @@ for (const c of cats) {
   const seen = new Set();
   for (const w of c.words || []) {
     if (seen.has(w)) errors.push(`Scharade "${c.name}": "${w}" ist doppelt`);
+    if (w.trim().split(/\s+/).length > 2 || w.length > 22) errors.push(`Scharade "${c.name}": "${w}" ist zu lang – nur kurze Begriffe (max. 2 Wörter)`);
     seen.add(w);
   }
 }
