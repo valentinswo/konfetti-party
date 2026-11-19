@@ -43,12 +43,15 @@ const App = {
     this.cleanups.forEach((fn) => { try { fn(); } catch {} });
     this.cleanups = [];
     window.scrollTo(0, 0);
+    this.current = name;
     this.screens[name](...args);
   },
 
   render(html, { anim = true } = {}) {
     this.root.innerHTML = html;
-    if (anim) { this.root.classList.remove("enter"); void this.root.offsetWidth; this.root.classList.add("enter"); }
+    // Nur bei echten Bildschirmwechseln einblenden – Aktualisierungen (anim:false) sollen nicht flackern
+    this.root.classList.remove("enter");
+    if (anim) { void this.root.offsetWidth; this.root.classList.add("enter"); }
   },
 
   on(selector, event, fn) {
@@ -132,6 +135,7 @@ const GAMES = [
   { screen: "charSetup", emoji: "🎭", title: "Scharade", sub: "Pantomime, Erklären, Zeichnen …", cls: "g-purple", big: true },
   { screen: "cards:wwe", emoji: "🤔", title: "Wer würde eher?", sub: "Zeigt auf die Person!", cls: "g-blue" },
   { screen: "cards:ihnn", emoji: "🙈", title: "Ich hab noch nie", sub: "Geständnisse garantiert", cls: "g-pink" },
+  { screen: "siebenSetup", emoji: "🍀", title: "Sieben auf einen Streich", sub: "Zocken, bis die Zahlen sich doppeln", cls: "g-teal", big: true },
   { screen: "bombSetup", emoji: "💣", title: "Tickende Bombe", sub: "Schnell sein – sonst BOOM!", cls: "g-fire" },
   { screen: "cards:wop", emoji: "🔥", title: "Wahrheit oder Pflicht", sub: "Der Klassiker", cls: "g-red" },
 ];
